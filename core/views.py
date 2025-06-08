@@ -7,10 +7,9 @@ def stock_analysis_view(request):
     table_html = None
     ticker = ""
 
-    if request.method == "POST":
-        ticker = request.POST.get("ticker", "").strip()
-        if ticker:
-            chart_data, table_html = analyze_stock(ticker)
+    ticker = request.GET.get("ticker", "").strip()
+    if ticker:
+        chart_data, table_html = analyze_stock(ticker)
 
     context = {
         "ticker": ticker,
@@ -25,10 +24,9 @@ def candlestick_analysis_view(request):
     table_html = None
     ticker = ""
 
-    if request.method == "POST":
-        ticker = request.POST.get("ticker", "").strip()
-        if ticker:
-            chart_data, table_html = analyze_stock_candlestick(ticker)
+    ticker = request.GET.get("ticker", "").strip()
+    if ticker:
+        chart_data, table_html = analyze_stock_candlestick(ticker)
 
     context = {
         "ticker": ticker,

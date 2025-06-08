@@ -1,8 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
 <h1>Candlestick Analysis</h1>
-<form method="post">
-  {% csrf_token %}
+<form method="get">
   <input type="text" name="ticker" value="{{ ticker }}" placeholder="Ticker code">
   <button type="submit">Analyze</button>
 </form>
