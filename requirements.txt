@@ -1,0 +1,11 @@
+Django>=4.2
+gunicorn
+psycopg2-binary
+django-environ
+pandas
+numpy
+yfinance
+mplfinance
+scikit-learn
+xgboost
+hmmlearn
