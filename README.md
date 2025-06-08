@@ -41,6 +41,7 @@ For local development, create a `.env` file and define your environment variable
 SECRET_KEY=your-secret-key
 DATABASE_URL=your-database-url
 DEBUG=True
+ALLOWED_HOSTS=*
 JQUANTS_TOKEN=your-token  # optional
 ```
 
