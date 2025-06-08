@@ -20,8 +20,9 @@ This is a simple Django project containing a single application `core`.
    railway init        # create Railway project
    railway add         # add Postgres plugin
    ```
-3. In the Railway dashboard, add the environment variables `SECRET_KEY`, `DATABASE_URL`, and `DEBUG`.
-4. If you plan to use [J-Quants](https://jpx-jquants.com/), sign up for a free account to obtain your API token and add it to the dashboard as `JQUANTS_TOKEN`. Otherwise, this variable can be omitted.
+3. In the Railway dashboard, add the environment variables `SECRET_KEY`, `DATABASE_URL`, `DEBUG`, and `ALLOWED_HOSTS`.
+4. `ALLOWED_HOSTS` accepts a comma-separated list of domain names and defaults to `*` if not set.
+5. If you plan to use [J-Quants](https://jpx-jquants.com/), sign up for a free account to obtain your API token and add it to the dashboard as `JQUANTS_TOKEN`. Otherwise, this variable can be omitted.
 
 ## Development
 
