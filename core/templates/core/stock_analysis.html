@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Stock Analysis</h1>
+<form method="post">
+  {% csrf_token %}
+  <input type="text" name="ticker" value="{{ ticker }}" placeholder="Ticker code">
+  <button type="submit">Analyze</button>
+</form>
+{% if chart_data %}
+  <h2>Chart</h2>
+  <img src="data:image/png;base64,{{ chart_data }}" alt="Chart">
+{% endif %}
+{% if table_html %}
+  <h2>Latest Data</h2>
+  {{ table_html|safe }}
+{% endif %}
+{% endblock %}
