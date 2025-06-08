@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Stock Prediction</h1>
+<form method="get">
+  <input type="text" name="ticker" value="{{ ticker }}" placeholder="Ticker code">
+  <button type="submit">Analyze</button>
+</form>
+{% if chart_data %}
+  <h2>Chart</h2>
+  <img src="data:image/png;base64,{{ chart_data }}" alt="Chart">
+{% endif %}
+{% if prediction_table %}
+  <h2>Prediction</h2>
+  {{ prediction_table|safe }}
+{% endif %}
+{% endblock %}
