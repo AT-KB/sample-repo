@@ -24,7 +24,7 @@ This is a simple Django project containing a single application `core`.
 4. When deploying to Railway or any other host, the service should supply a proper `DATABASE_URL`. If not provided, the value from the `.env` file will be used.
    Set `SECRET_KEY` to `d^2$4jbvh*ihfkdupc(p#6q_i6trs!$x&&19+i*fj3hfh9u&cr`.
 5. Set `ALLOWED_HOSTS` to a comma-separated list of domain names, such as `example.com`.
-6. The variable defaults to `*` if not provided.
+6. When `DEBUG=True`, `localhost` and `127.0.0.1` are added automatically. If no hosts are configured after this, the application falls back to `*`.
 7. If you plan to use [J-Quants](https://jpx-jquants.com/), sign up for a free account to obtain your API token and add it to the dashboard as `JQUANTS_TOKEN`. Otherwise, this variable can be omitted.
 
 ## Development
