@@ -6,6 +6,7 @@ pandas
 numpy
 yfinance
 mplfinance
+matplotlib
 scikit-learn
 xgboost
 hmmlearn
