@@ -233,15 +233,18 @@ def predict_future_moves(ticker: str, horizons=None):
     table = pd.DataFrame(results)
     prob_col = "上昇確率"
 
-    def highlight(val: float) -> str:
-        if val >= 70:
-            return "background-color: lightgreen"
-        elif val <= 30:
-            return "background-color: lightcoral"
-        return ""
+    def color_scale(val: float) -> str:
+        if val == 50:
+            return ""
+        if val > 50:
+            alpha = min((val - 50) / 50, 1)
+            return f"background-color: rgba(0, 255, 0, {alpha:.2f})"
+        alpha = min((50 - val) / 50, 1)
+        return f"background-color: rgba(255, 0, 0, {alpha:.2f})"
 
     styled_table = (
-        table.style.applymap(highlight, subset=[prob_col])
+        table.style.applymap(color_scale, subset=[prob_col])
+        .format({prob_col: "{:.0f}%", "期待リターン": lambda x: f"{x:+.2f}%"})
         .hide(axis="index")
         .set_table_attributes('class="table table-striped"')
     )
