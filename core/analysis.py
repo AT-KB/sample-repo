@@ -103,6 +103,11 @@ def analyze_stock_candlestick(ticker: str):
     except Exception as e:
         return None, None, "チャート生成に失敗しました"
 
+    fig.subplots_adjust(hspace=0.15)
+    for axis in fig.axes:
+        ymin = axis.get_ylim()[0]
+        axis.axhline(y=ymin, color="black", lw=0.5)
+
     buf = BytesIO()
     fig.savefig(buf, format="png")
     plt.close(fig)
@@ -190,7 +195,6 @@ def predict_future_moves(ticker: str):
     df.dropna(inplace=True)
 
     X = df[[f"lag_{i}" for i in range(1, 6)]]
-    features_table = pd.DataFrame({"Features": X.columns})
     horizons = [5, 25]
     results = []
     from sklearn.linear_model import LogisticRegression
@@ -208,15 +212,30 @@ def predict_future_moves(ticker: str):
             "Prediction": prediction,
             "Probability (%)": round(prob, 2),
         })
+        importance_model = model
 
     table = pd.DataFrame(results)
+    prob_col = "Probability (%)<br><small>これは翌営業日に株価が上昇する確率です</small>"
+    table.rename(columns={"Probability (%)": prob_col}, inplace=True)
 
-    def colorize(val: float) -> str:
-        color = "blue" if val > 50 else "red"
-        return f'<span style="color:{color}">{val:.2f}</span>'
+    def highlight(val: float) -> str:
+        if val >= 70:
+            return "background-color: lightgreen"
+        elif val <= 30:
+            return "background-color: lightcoral"
+        return ""
 
-    table["Probability (%)"] = table["Probability (%)"].apply(colorize)
+    styled_table = (
+        table.style.applymap(highlight, subset=[prob_col])
+        .hide(axis="index")
+        .set_table_attributes('class="table table-striped"')
+    )
+
+    coef = importance_model.coef_.flatten()
+    importance_df = pd.DataFrame({"Feature": X.columns, "Importance": abs(coef)})
+    importance_df.sort_values("Importance", ascending=False, inplace=True)
+
     return (
-        table.to_html(classes="table table-striped", index=False, escape=False),
-        features_table.to_html(classes="table table-striped", index=False),
+        styled_table.to_html(),
+        importance_df.to_html(classes="table table-striped", index=False),
     )
