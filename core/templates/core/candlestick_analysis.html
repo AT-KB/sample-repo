@@ -13,4 +13,8 @@
   <h2>Latest Data</h2>
   {{ table_html|safe }}
 {% endif %}
+{% if prediction_table %}
+  <h2>Predictions</h2>
+  {{ prediction_table|safe }}
+{% endif %}
 {% endblock %}
