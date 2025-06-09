@@ -5,6 +5,9 @@
   <input type="text" name="ticker" value="{{ ticker }}" placeholder="Ticker code">
   <button type="submit">Analyze</button>
 </form>
+{% if warning %}
+  <div class="alert alert-warning">{{ warning }}</div>
+{% endif %}
 {% if chart_data %}
   <h2>Chart</h2>
   <img src="data:image/png;base64,{{ chart_data }}" alt="Chart">
