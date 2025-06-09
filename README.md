@@ -54,3 +54,14 @@ pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver
 ```
+
+## Charts and predictions
+
+The application shows extra panels below the stock price chart:
+
+- **MACD panel** – compares two moving averages to reveal momentum.
+- **RSI panel** – highlights when the market may be overbought or oversold.
+- **Prediction table** – lists the model's forecasts for several upcoming days.
+
+These indicators rely on the `ta` package, which is already listed in
+`requirements.txt`.
