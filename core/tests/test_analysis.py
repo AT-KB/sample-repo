@@ -8,6 +8,9 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myapp.settings")
 os.environ.setdefault("SECRET_KEY", "dummy")
 os.environ.setdefault("DEBUG", "True")
 
+import django
+django.setup()
+
 from core.analysis import (
     analyze_stock,
     analyze_stock_candlestick,
@@ -58,3 +61,12 @@ class AnalysisTests(SimpleTestCase):
     def test_predict_next_move_with_no_data(self, mock_download):
         html = predict_next_move("7203")
         self.assertIsNone(html)
+
+    @patch("core.views.analyze_stock")
+    def test_stock_analysis_view_uses_analyze_stock(self, mock_analyze):
+        mock_analyze.return_value = ("chart", "<table></table>", None)
+        response = self.client.get("/stock/?ticker=7203", HTTP_HOST="localhost")
+        self.assertEqual(response.status_code, 200)
+        mock_analyze.assert_called_once_with("7203")
+        self.assertIn("chart", response.content.decode())
+        self.assertIn("<table", response.content.decode())
