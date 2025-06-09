@@ -19,6 +19,7 @@ class AnalysisTests(SimpleTestCase):
 
     @patch("yfinance.download", return_value=SAMPLE_DF.copy())
     def test_prediction_generation(self, mock_download):
-        table = predict_future_moves("7203")
-        self.assertIn("<table", table)
-        self.assertIn("Prediction", table)
+        prediction_html, features_html = predict_future_moves("7203")
+        self.assertIn("<table", prediction_html)
+        self.assertIn("<table", features_html)
+        self.assertIn("Prediction", prediction_html)

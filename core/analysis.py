@@ -153,7 +153,7 @@ def predict_next_move(ticker: str):
 
 
 def predict_future_moves(ticker: str):
-    """Predict stock direction for 1, 5 and 25 days ahead."""
+    """Predict stock direction for 5 and 25 days ahead."""
     ticker_symbol = f"{ticker}.T" if not ticker.endswith('.T') else ticker
     df = yf.download(ticker_symbol, period="2y", interval="1d")
     if len(df) < 30:
@@ -165,7 +165,8 @@ def predict_future_moves(ticker: str):
     df.dropna(inplace=True)
 
     X = df[[f"lag_{i}" for i in range(1, 6)]]
-    horizons = [1, 5, 25]
+    features_table = pd.DataFrame({"Features": X.columns})
+    horizons = [5, 25]
     results = []
     from sklearn.linear_model import LogisticRegression
 
@@ -190,4 +191,7 @@ def predict_future_moves(ticker: str):
         return f'<span style="color:{color}">{val:.2f}</span>'
 
     table["Probability (%)"] = table["Probability (%)"].apply(colorize)
-    return table.to_html(classes="table table-striped", index=False, escape=False)
+    return (
+        table.to_html(classes="table table-striped", index=False, escape=False),
+        features_table.to_html(classes="table table-striped", index=False),
+    )
