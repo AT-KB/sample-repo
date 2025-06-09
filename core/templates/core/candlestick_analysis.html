@@ -29,10 +29,6 @@
         <h3>Predictions</h3>
         {{ data1.prediction_table|safe }}
       {% endif %}
-    {% if data1.importance_table %}
-      <h3>Feature Importance</h3>
-      {{ data1.importance_table|safe }}
-    {% endif %}
   </div>
   <div class="col-md-6">
     {% if data2.warning %}
@@ -50,10 +46,6 @@
         <h3>Predictions</h3>
         {{ data2.prediction_table|safe }}
       {% endif %}
-    {% if data2.importance_table %}
-      <h3>Feature Importance</h3>
-      {{ data2.importance_table|safe }}
-    {% endif %}
   </div>
 </div>
 {% endblock %}
