@@ -17,4 +17,8 @@
   <h2>Predictions</h2>
   {{ prediction_table|safe }}
 {% endif %}
+{% if features_table %}
+  <h2>Indicators Used</h2>
+  {{ features_table|safe }}
+{% endif %}
 {% endblock %}
