@@ -35,15 +35,13 @@ def candlestick_analysis_view(request):
             return {}
         chart_data, table_html, warning = analyze_stock_candlestick(ticker)
         prediction_table = None
-        importance_table = None
         company_name = get_company_name(ticker)
         if warning is None:
-            prediction_table, importance_table = predict_future_moves(ticker)
+            prediction_table, _ = predict_future_moves(ticker)
         return {
             "chart_data": chart_data,
             "table_html": table_html,
             "prediction_table": prediction_table,
-            "importance_table": importance_table,
             "warning": warning,
             "company_name": company_name,
         }
