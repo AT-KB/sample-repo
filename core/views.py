@@ -3,8 +3,8 @@ from .analysis import (
     analyze_stock,
     analyze_stock_candlestick,
     generate_stock_plot,
-    predict_next_move,
     predict_future_moves,
+    predict_next_move,
     get_company_name,
 )
 
@@ -68,7 +68,7 @@ def analysis_view(request):
     ticker = request.GET.get("ticker", "").strip()
     if ticker:
         chart_data = generate_stock_plot(ticker)
-        prediction_table = predict_next_move(ticker)
+        prediction_table, _ = predict_future_moves(ticker)
 
     context = {
         "ticker": ticker,

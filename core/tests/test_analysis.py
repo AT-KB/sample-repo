@@ -37,6 +37,7 @@ class AnalysisTests(SimpleTestCase):
         self.assertIn("<table", prediction_html)
         self.assertIn("<table", importance_html)
         self.assertIn("Prediction", prediction_html)
+        self.assertIn("期待リターン", prediction_html)
         self.assertIn("Feature", importance_html)
         self.assertIn("Importance", importance_html)
 
