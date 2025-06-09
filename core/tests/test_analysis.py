@@ -8,7 +8,12 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myapp.settings")
 os.environ.setdefault("SECRET_KEY", "dummy")
 os.environ.setdefault("DEBUG", "True")
 
-from core.analysis import analyze_stock_candlestick, predict_future_moves
+from core.analysis import (
+    analyze_stock,
+    analyze_stock_candlestick,
+    predict_future_moves,
+    predict_next_move,
+)
 
 
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "sample_prices.csv"
@@ -29,3 +34,27 @@ class AnalysisTests(SimpleTestCase):
         self.assertIn("<table", prediction_html)
         self.assertIn("<table", features_html)
         self.assertIn("Prediction", prediction_html)
+
+    @patch("yfinance.download", return_value=SAMPLE_DF.copy())
+    def test_analyze_stock_with_data(self, mock_download):
+        chart, table, warning = analyze_stock("7203")
+        self.assertIsNone(warning)
+        self.assertTrue(chart.startswith("iVBOR"))
+        self.assertIn("<table", table)
+
+    @patch("yfinance.download", return_value=pd.DataFrame())
+    def test_analyze_stock_with_no_data(self, mock_download):
+        chart, table = analyze_stock("7203")
+        self.assertIsNone(chart)
+        self.assertIsNone(table)
+
+    @patch("yfinance.download", return_value=SAMPLE_DF.copy())
+    def test_predict_next_move_with_data(self, mock_download):
+        html = predict_next_move("7203")
+        self.assertIsNotNone(html)
+        self.assertIn("<table", html)
+
+    @patch("yfinance.download", return_value=pd.DataFrame())
+    def test_predict_next_move_with_no_data(self, mock_download):
+        html = predict_next_move("7203")
+        self.assertIsNone(html)
