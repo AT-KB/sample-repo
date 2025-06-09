@@ -47,6 +47,15 @@ ALLOWED_HOSTS=*
 JQUANTS_TOKEN=your-token  # optional
 ```
 
+**Important:** Variable names must match exactly with no spaces.
+
+| Correct Name | Common Mistakes |
+|--------------|-----------------|
+| `SECRET_KEY` | `SECRET KEY` |
+| `DATABASE_URL` | `DATABASE URL` |
+| `DEBUG` | `Debug` |
+| `ALLOWED_HOSTS` | `ALLOWED HOSTS` |
+
 Place the file in the root directory so Django can load these settings. `SECRET_KEY` is a random string for cryptographic signing, `DATABASE_URL` specifies your database connection, `DEBUG` turns debug mode on or off, and `ALLOWED_HOSTS` lists valid domain names. `JQUANTS_TOKEN` enables optional J-Quants features.
 
 Install dependencies and run the server:
