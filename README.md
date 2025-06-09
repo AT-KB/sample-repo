@@ -49,10 +49,20 @@ JQUANTS_TOKEN=your-token  # optional
 
 Install dependencies and run the server:
 
+
 ```bash
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver
+```
+
+## Running Tests
+
+Install the dependencies and execute the test suite with `pytest`:
+
+```bash
+pip install -r requirements.txt
+pytest
 ```
 
 ## Charts and predictions

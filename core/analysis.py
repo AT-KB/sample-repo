@@ -135,7 +135,7 @@ def predict_next_move(ticker: str):
 
     from sklearn.linear_model import LogisticRegression
 
-    model = LogisticRegression(max_iter=200)
+    model = LogisticRegression(max_iter=200, random_state=0)
     model.fit(X_train, y_train)
 
     latest_features = X.iloc[[-1]]
@@ -174,7 +174,7 @@ def predict_future_moves(ticker: str):
         df[f"target_{h}"] = (df["Close"].shift(-h) > df["Close"]).astype(int)
         y = df[f"target_{h}"]
         split = int(len(df) * 0.7)
-        model = LogisticRegression(max_iter=200)
+        model = LogisticRegression(max_iter=200, random_state=0)
         model.fit(X[:split], y[:split])
         prob = model.predict_proba(X.iloc[[-1]])[0, 1] * 100
         prediction = "UP" if prob >= 50 else "DOWN"
