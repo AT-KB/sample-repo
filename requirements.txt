@@ -9,3 +9,5 @@ mplfinance
 matplotlib
 scikit-learn
 ta
+pytest
+jinja2
