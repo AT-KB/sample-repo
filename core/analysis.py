@@ -10,7 +10,7 @@ import ta
 def analyze_stock(ticker: str):
     """Fetch data and return base64 chart image and HTML table."""
     ticker_symbol = f"{ticker}.T" if not ticker.endswith('.T') else ticker
-    df = yf.download(ticker_symbol, period="1y", interval="1d")
+    df = yf.download(ticker_symbol, period="1y", interval="1d", auto_adjust=False)
     if df.empty:
         return None, None
 
@@ -45,7 +45,7 @@ def analyze_stock(ticker: str):
 def analyze_stock_candlestick(ticker: str):
     """Generate candlestick chart with volume, MACD, and RSI."""
     ticker_symbol = f"{ticker}.T" if not ticker.endswith('.T') else ticker
-    df = yf.download(ticker_symbol, period="6mo", interval="1d")
+    df = yf.download(ticker_symbol, period="6mo", interval="1d", auto_adjust=False)
     if df.empty:
         return None, None
 
@@ -95,7 +95,7 @@ def analyze_stock_candlestick(ticker: str):
 def generate_stock_plot(ticker: str):
     """Return base64 encoded line plot for given ticker."""
     ticker_symbol = f"{ticker}.T" if not ticker.endswith('.T') else ticker
-    df = yf.download(ticker_symbol, period="3mo", interval="1d")
+    df = yf.download(ticker_symbol, period="3mo", interval="1d", auto_adjust=False)
     if df.empty:
         return None
 
@@ -117,7 +117,7 @@ def generate_stock_plot(ticker: str):
 def predict_next_move(ticker: str):
     """Simple ML model predicting next day's move (UP/DOWN)."""
     ticker_symbol = f"{ticker}.T" if not ticker.endswith('.T') else ticker
-    df = yf.download(ticker_symbol, period="2y", interval="1d")
+    df = yf.download(ticker_symbol, period="2y", interval="1d", auto_adjust=False)
     if len(df) < 30:
         return None
 
@@ -155,7 +155,7 @@ def predict_next_move(ticker: str):
 def predict_future_moves(ticker: str):
     """Predict stock direction for 5 and 25 days ahead."""
     ticker_symbol = f"{ticker}.T" if not ticker.endswith('.T') else ticker
-    df = yf.download(ticker_symbol, period="2y", interval="1d")
+    df = yf.download(ticker_symbol, period="2y", interval="1d", auto_adjust=False)
     if len(df) < 30:
         return (None, None)
 
