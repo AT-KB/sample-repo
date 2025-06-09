@@ -55,11 +55,14 @@ def analyze_stock_candlestick(ticker: str):
     df["MA5"] = df["Close"].rolling(window=5).mean()
     df["MA25"] = df["Close"].rolling(window=25).mean()
     df["MA75"] = df["Close"].rolling(window=75).mean()
-    df["MACD"] = ta.trend.macd(df["Close"])
-    df["MACD_signal"] = ta.trend.macd_signal(df["Close"])
-    df["RSI"] = ta.momentum.rsi(df["Close"])
+
+    close_series = df["Close"].squeeze()
+    df["MACD"] = ta.trend.macd(close_series)
+    df["MACD_signal"] = ta.trend.macd_signal(close_series)
+    df["RSI"] = ta.momentum.rsi(close_series)
 
     plot_df = df[["Open", "High", "Low", "Close", "Volume"]].dropna().astype(float)
+    plot_df.dropna(inplace=True)
 
     apds = [
         mpf.make_addplot(df["MACD"], panel=2, color="blue", ylabel="MACD"),
