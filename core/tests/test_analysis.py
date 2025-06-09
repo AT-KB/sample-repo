@@ -72,3 +72,19 @@ class AnalysisTests(SimpleTestCase):
         mock_analyze.assert_called_once_with("7203")
         self.assertIn("chart", response.content.decode())
         self.assertIn("<table", response.content.decode())
+
+    @patch("core.views.predict_future_moves")
+    @patch("core.views.analyze_stock_candlestick")
+    def test_candlestick_view_handles_two_tickers(self, mock_analyze, mock_predict):
+        mock_analyze.return_value = ("chart", "<table></table>", None)
+        mock_predict.return_value = ("<table></table>", "<table></table>")
+        response = self.client.get(
+            "/candlestick/?ticker1=7203&ticker2=6758", HTTP_HOST="localhost"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(mock_analyze.call_count, 2)
+        mock_analyze.assert_any_call("7203")
+        mock_analyze.assert_any_call("6758")
+        self.assertEqual(mock_predict.call_count, 2)
+        content = response.content.decode()
+        self.assertIn("chart", content)
