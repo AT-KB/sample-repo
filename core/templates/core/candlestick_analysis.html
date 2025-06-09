@@ -1,28 +1,61 @@
 {% extends 'base.html' %}
 {% block content %}
 <h1>Candlestick Analysis</h1>
-<form method="get">
-  <input type="text" name="ticker" value="{{ ticker }}" placeholder="Ticker code">
-  <button type="submit">Analyze</button>
+<form method="get" class="row g-2 mb-3">
+  <div class="col-md-5">
+    <input type="text" class="form-control" name="ticker1" value="{{ ticker1 }}" placeholder="Ticker code 1">
+  </div>
+  <div class="col-md-5">
+    <input type="text" class="form-control" name="ticker2" value="{{ ticker2 }}" placeholder="Ticker code 2">
+  </div>
+  <div class="col-md-2">
+    <button type="submit" class="btn btn-primary w-100">Analyze</button>
+  </div>
 </form>
-{% if warning %}
-  <div class="alert alert-warning">{{ warning }}</div>
-{% endif %}
-{% if chart_data %}
-  <h2>Chart</h2>
-  <img src="data:image/png;base64,{{ chart_data }}" alt="Chart">
-{% endif %}
-{% if table_html %}
-  <h2>Latest Data</h2>
-  {{ table_html|safe }}
-{% endif %}
-{% if prediction_table %}
-  <h2>Predictions</h2>
-  {{ prediction_table|safe }}
-  <p class="small text-muted">Probability (%) は翌営業日に株価が上昇する確率です。</p>
-{% endif %}
-{% if importance_table %}
-  <h2>Feature Importance</h2>
-  {{ importance_table|safe }}
-{% endif %}
+<div class="row">
+  <div class="col-md-6">
+    {% if data1.warning %}
+      <div class="alert alert-warning">{{ data1.warning }}</div>
+    {% endif %}
+    {% if data1.chart_data %}
+      <h2>{{ ticker1 }}</h2>
+      <img src="data:image/png;base64,{{ data1.chart_data }}" alt="Chart" class="img-fluid">
+    {% endif %}
+    {% if data1.table_html %}
+      <h3>Latest Data</h3>
+      {{ data1.table_html|safe }}
+    {% endif %}
+    {% if data1.prediction_table %}
+      <h3>Predictions</h3>
+      {{ data1.prediction_table|safe }}
+      <p class="small text-muted">Probability (%) は翌営業日に株価が上昇する確率です。</p>
+    {% endif %}
+    {% if data1.importance_table %}
+      <h3>Feature Importance</h3>
+      {{ data1.importance_table|safe }}
+    {% endif %}
+  </div>
+  <div class="col-md-6">
+    {% if data2.warning %}
+      <div class="alert alert-warning">{{ data2.warning }}</div>
+    {% endif %}
+    {% if data2.chart_data %}
+      <h2>{{ ticker2 }}</h2>
+      <img src="data:image/png;base64,{{ data2.chart_data }}" alt="Chart" class="img-fluid">
+    {% endif %}
+    {% if data2.table_html %}
+      <h3>Latest Data</h3>
+      {{ data2.table_html|safe }}
+    {% endif %}
+    {% if data2.prediction_table %}
+      <h3>Predictions</h3>
+      {{ data2.prediction_table|safe }}
+      <p class="small text-muted">Probability (%) は翌営業日に株価が上昇する確率です。</p>
+    {% endif %}
+    {% if data2.importance_table %}
+      <h3>Feature Importance</h3>
+      {{ data2.importance_table|safe }}
+    {% endif %}
+  </div>
+</div>
 {% endblock %}

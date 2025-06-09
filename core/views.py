@@ -26,26 +26,33 @@ def stock_analysis_view(request):
 
 
 def candlestick_analysis_view(request):
-    chart_data = None
-    table_html = None
-    prediction_table = None
-    importance_table = None
-    warning = None
-    ticker = ""
+    ticker1 = request.GET.get("ticker1", "").strip()
+    ticker2 = request.GET.get("ticker2", "").strip()
 
-    ticker = request.GET.get("ticker", "").strip()
-    if ticker:
+    def fetch_data(ticker: str):
+        if not ticker:
+            return {}
         chart_data, table_html, warning = analyze_stock_candlestick(ticker)
+        prediction_table = None
+        importance_table = None
         if warning is None:
             prediction_table, importance_table = predict_future_moves(ticker)
+        return {
+            "chart_data": chart_data,
+            "table_html": table_html,
+            "prediction_table": prediction_table,
+            "importance_table": importance_table,
+            "warning": warning,
+        }
+
+    data1 = fetch_data(ticker1)
+    data2 = fetch_data(ticker2)
 
     context = {
-        "ticker": ticker,
-        "chart_data": chart_data,
-        "table_html": table_html,
-        "prediction_table": prediction_table,
-        "importance_table": importance_table,
-        "warning": warning,
+        "ticker1": ticker1,
+        "ticker2": ticker2,
+        "data1": data1,
+        "data2": data2,
     }
     return render(request, "core/candlestick_analysis.html", context)
 
