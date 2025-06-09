@@ -52,18 +52,18 @@ def analyze_stock_candlestick(ticker: str):
             interval="1d",
             auto_adjust=False,
         )
-        if isinstance(stock_data.columns, pd.MultiIndex):
-            stock_data.columns = stock_data.columns.droplevel(0)
+        stock_data.columns = [
+            "Open",
+            "High",
+            "Low",
+            "Close",
+            "Adj Close",
+            "Volume",
+        ]
     except Exception:
         return None, None, "データ取得に失敗しました"
     if stock_data.empty:
         return None, None, "データ取得に失敗しました"
-
-    # Debug: show info before dropping NaN
-    print(stock_data.info())
-    stock_data = stock_data.dropna()
-    print("--- After dropna() ---")
-    print(stock_data.info())
 
     stock_data["MA5"] = stock_data["Close"].rolling(window=5).mean()
     stock_data["MA25"] = stock_data["Close"].rolling(window=25).mean()
@@ -101,7 +101,6 @@ def analyze_stock_candlestick(ticker: str):
             panel_ratios=(3, 1, 1, 1),
         )
     except Exception as e:
-        print(stock_data.head())
         return None, None, "チャート生成に失敗しました"
 
     buf = BytesIO()
