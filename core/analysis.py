@@ -133,8 +133,7 @@ def predict_next_move(ticker: str):
     y = (df["Return"] > 0).astype(int)
 
     split = int(len(df) * 0.7)
-    X_train, X_test = X[:split], X[split:]
-    y_train, y_test = y[:split], y[split:]
+    X_train, y_train = X[:split], y[:split]
 
     from sklearn.linear_model import LogisticRegression
 
