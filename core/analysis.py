@@ -196,6 +196,7 @@ def predict_future_moves(ticker: str, horizons=None):
     df.dropna(inplace=True)
 
     X = df[[f"lag_{i}" for i in range(1, 6)]]
+    X.columns = [f"lag_{i}" for i in range(1, 6)]
     results = []
     tscv = TimeSeriesSplit(n_splits=5)
 
