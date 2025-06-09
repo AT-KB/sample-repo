@@ -62,6 +62,7 @@ def analyze_stock_candlestick(ticker: str):
     df["RSI"] = ta.momentum.rsi(close_series)
 
     plot_df = df[["Open", "High", "Low", "Close", "Volume"]].dropna().astype(float)
+    plot_df.dropna(inplace=True)
 
     apds = [
         mpf.make_addplot(df["MACD"], panel=2, color="blue", ylabel="MACD"),
