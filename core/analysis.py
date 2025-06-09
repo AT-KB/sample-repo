@@ -5,6 +5,8 @@ from io import BytesIO
 import base64
 import mplfinance as mpf
 import ta
+from lightgbm import LGBMClassifier
+from sklearn.model_selection import TimeSeriesSplit
 
 TICKER_NAMES = {
     "7203": "トヨタ自動車",
@@ -195,25 +197,28 @@ def predict_future_moves(ticker: str, horizons=None):
 
     X = df[[f"lag_{i}" for i in range(1, 6)]]
     results = []
-    from sklearn.linear_model import LogisticRegression
+    tscv = TimeSeriesSplit(n_splits=5)
 
-    importance_model = None
     for h in horizons:
         df[f"target_{h}"] = (df["Close"].shift(-h) > df["Close"]).astype(int)
         df[f"future_return_{h}"] = df["Close"].shift(-h) / df["Close"] - 1
         y = df[f"target_{h}"]
-        split = int(len(df) * 0.7)
-        X_train = X[:split]
-        y_train = y[:split]
-        returns_train = df[f"future_return_{h}"][:split]
-        model = LogisticRegression(max_iter=200, random_state=0)
-        model.fit(X_train, y_train)
+        model = None
+        returns_train = None
+        train_index = None
+        for train_index, _ in tscv.split(X):
+            model = LGBMClassifier(random_state=0)
+            X.columns = [f"lag_{i}" for i in range(1, 6)]
+            model.fit(X.iloc[train_index], y.iloc[train_index])
+            returns_train = df[f"future_return_{h}"].iloc[train_index]
+        if model is None:
+            continue
         prob_up = model.predict_proba(X.iloc[[-1]])[0, 1] * 100
         prediction = "UP" if prob_up >= 50 else "DOWN"
 
-        train_pred = model.predict(X_train)
-        up_mask = (train_pred == 1) & (y_train == 1)
-        down_mask = (train_pred == 0) & (y_train == 0)
+        train_pred = model.predict(X.iloc[train_index])
+        up_mask = (train_pred == 1) & (y.iloc[train_index] == 1)
+        down_mask = (train_pred == 0) & (y.iloc[train_index] == 0)
         up_return = returns_train[up_mask].mean()
         down_return = returns_train[down_mask].mean()
         expected_return = up_return if prediction == "UP" else down_return
@@ -228,7 +233,6 @@ def predict_future_moves(ticker: str, horizons=None):
                 "期待リターン": round(expected_return * 100, 2),
             }
         )
-        importance_model = model
 
     table = pd.DataFrame(results)
     prob_col = "上昇確率"
@@ -249,11 +253,7 @@ def predict_future_moves(ticker: str, horizons=None):
         .set_table_attributes('class="table table-striped"')
     )
 
-    coef = importance_model.coef_.flatten()
-    importance_df = pd.DataFrame({"Feature": X.columns, "Importance": abs(coef)})
-    importance_df.sort_values("Importance", ascending=False, inplace=True)
-
     return (
         styled_table.to_html(),
-        importance_df.to_html(classes="table table-striped", index=False),
+        None,
     )

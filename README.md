@@ -63,6 +63,7 @@ Install dependencies and run the server:
 
 ```bash
 pip install -r requirements.txt
+# requirements.txt に lightgbm が追加されています
 python manage.py migrate
 python manage.py runserver
 ```
