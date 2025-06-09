@@ -18,7 +18,8 @@ SAMPLE_DF = pd.read_csv(FIXTURE_PATH, index_col="Date", parse_dates=True)
 class AnalysisTests(SimpleTestCase):
     @patch("yfinance.download", return_value=SAMPLE_DF.copy())
     def test_candlestick_chart_generation(self, mock_download):
-        chart, table = analyze_stock_candlestick("7203")
+        chart, table, warning = analyze_stock_candlestick("7203")
+        self.assertIsNone(warning)
         self.assertTrue(chart.startswith("iVBOR"))
         self.assertIn("<table", table)
 

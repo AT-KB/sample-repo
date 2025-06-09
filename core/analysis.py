@@ -39,15 +39,18 @@ def analyze_stock(ticker: str):
         .to_html(classes="table table-striped")
     )
 
-    return chart_data, table_html
+    return chart_data, table_html, None
 
 
 def analyze_stock_candlestick(ticker: str):
     """Generate candlestick chart with volume, MACD, and RSI."""
     ticker_symbol = f"{ticker}.T" if not ticker.endswith('.T') else ticker
-    df = yf.download(ticker_symbol, period="6mo", interval="1d", auto_adjust=False)
+    try:
+        df = yf.download(ticker_symbol, period="6mo", interval="1d", auto_adjust=False)
+    except Exception:
+        return None, None, "データ取得に失敗しました"
     if df.empty:
-        return None, None
+        return None, None, "データ取得に失敗しました"
 
     df["MA5"] = df["Close"].rolling(window=5).mean()
     df["MA25"] = df["Close"].rolling(window=25).mean()
@@ -89,7 +92,7 @@ def analyze_stock_candlestick(ticker: str):
         .to_html(classes="table table-striped")
     )
 
-    return chart_data, table_html
+    return chart_data, table_html, None
 
 
 def generate_stock_plot(ticker: str):
