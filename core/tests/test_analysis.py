@@ -33,13 +33,11 @@ class AnalysisTests(SimpleTestCase):
 
     @patch("yfinance.download", return_value=SAMPLE_DF.copy())
     def test_prediction_generation(self, mock_download):
-        prediction_html, importance_html = predict_future_moves("7203")
+        prediction_html, result_none = predict_future_moves("7203")
         self.assertIn("<table", prediction_html)
-        self.assertIn("<table", importance_html)
         self.assertIn("Prediction", prediction_html)
         self.assertIn("期待リターン", prediction_html)
-        self.assertIn("Feature", importance_html)
-        self.assertIn("Importance", importance_html)
+        self.assertIsNone(result_none)
 
     @patch("yfinance.download", return_value=SAMPLE_DF.copy())
     def test_analyze_stock_with_data(self, mock_download):
@@ -78,7 +76,7 @@ class AnalysisTests(SimpleTestCase):
     @patch("core.views.analyze_stock_candlestick")
     def test_candlestick_view_handles_two_tickers(self, mock_analyze, mock_predict):
         mock_analyze.return_value = ("chart", "<table></table>", None)
-        mock_predict.return_value = ("<table></table>", "<table></table>")
+        mock_predict.return_value = ("<table></table>", None)
         response = self.client.get(
             "/candlestick/?ticker1=7203&ticker2=6758", HTTP_HOST="localhost"
         )
