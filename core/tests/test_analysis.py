@@ -1,12 +1,17 @@
+import os
 from django.test import SimpleTestCase
 from unittest.mock import patch
 from pathlib import Path
 import pandas as pd
 
-from .analysis import analyze_stock_candlestick, predict_future_moves
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myapp.settings")
+os.environ.setdefault("SECRET_KEY", "dummy")
+os.environ.setdefault("DEBUG", "True")
+
+from core.analysis import analyze_stock_candlestick, predict_future_moves
 
 
-FIXTURE_PATH = Path(__file__).parent / "tests" / "fixtures" / "sample_prices.csv"
+FIXTURE_PATH = Path(__file__).parent / "fixtures" / "sample_prices.csv"
 SAMPLE_DF = pd.read_csv(FIXTURE_PATH, index_col="Date", parse_dates=True)
 
 
