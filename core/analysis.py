@@ -59,6 +59,7 @@ def analyze_stock(ticker: str):
     table_html = (
         df.tail(5)[["Close", "MA5", "MA25"]]
         .round(0)
+        .fillna(0)
         .astype(int)
         .to_html(classes="table table-striped")
     )
@@ -141,6 +142,7 @@ def analyze_stock_candlestick(ticker: str):
     table_html = (
         stock_data.tail(5)[["Close", "MA5", "MA25", "MA75", "MACD", "MACD_signal", "RSI"]]
         .round(0)
+        .fillna(0)
         .astype(int)
         .to_html(classes="table table-striped")
     )
@@ -171,72 +173,61 @@ def generate_stock_plot(ticker: str):
 
 
 def predict_next_move(ticker: str):
-    """Simple ML model predicting next day's move (UP/DOWN)."""
-    ticker_symbol = f"{ticker}.T" if not ticker.endswith('.T') else ticker
-    df = yf.download(ticker_symbol, period="2y", interval="1d", auto_adjust=False)
-    if len(df) < 30:
-        return None
-
-    df["Return"] = df["Close"].pct_change()
-    for i in range(1, 6):
-        df[f"lag_{i}"] = df["Return"].shift(i)
-    df.dropna(inplace=True)
-
-    X = df[[f"lag_{i}" for i in range(1, 6)]]
-    y = (df["Return"] > 0).astype(int)
-
-    split = int(len(df) * 0.7)
-    X_train, y_train = X[:split], y[:split]
-
-    from sklearn.linear_model import LogisticRegression
-
-    model = LogisticRegression(max_iter=200, random_state=0)
-    model.fit(X_train, y_train)
-
-    latest_features = X.iloc[[-1]]
-    prob = model.predict_proba(latest_features)[0, 1] * 100
-    prediction = "UP" if prob >= 50 else "DOWN"
-
-    table = pd.DataFrame(
-        {
-            "Next Day": [df.index[-1] + pd.Timedelta(days=1)],
-            "Prediction": [prediction],
-            "上昇確率": [round(prob)],
-        }
-    )
-    return table.to_html(classes="table table-striped", index=False)
+    """Convenience wrapper to get only the one-day prediction."""
+    table_html, _ = predict_future_moves(ticker, horizons=[1])
+    return table_html
 
 
-def predict_future_moves(ticker: str):
-    """Predict stock direction for 5 and 25 days ahead."""
+def predict_future_moves(ticker: str, horizons=None):
+    """Predict stock direction for multiple days ahead with expected return."""
     ticker_symbol = f"{ticker}.T" if not ticker.endswith('.T') else ticker
     df = yf.download(ticker_symbol, period="2y", interval="1d", auto_adjust=False)
     if len(df) < 30:
         return (None, None)
 
+    if horizons is None:
+        horizons = [1, 7, 28]
+
     df["Return"] = df["Close"].pct_change()
     for i in range(1, 6):
         df[f"lag_{i}"] = df["Return"].shift(i)
     df.dropna(inplace=True)
 
     X = df[[f"lag_{i}" for i in range(1, 6)]]
-    horizons = [5, 25]
     results = []
     from sklearn.linear_model import LogisticRegression
 
+    importance_model = None
     for h in horizons:
         df[f"target_{h}"] = (df["Close"].shift(-h) > df["Close"]).astype(int)
+        df[f"future_return_{h}"] = df["Close"].shift(-h) / df["Close"] - 1
         y = df[f"target_{h}"]
         split = int(len(df) * 0.7)
+        X_train = X[:split]
+        y_train = y[:split]
+        returns_train = df[f"future_return_{h}"][:split]
         model = LogisticRegression(max_iter=200, random_state=0)
-        model.fit(X[:split], y[:split])
-        prob = model.predict_proba(X.iloc[[-1]])[0, 1] * 100
-        prediction = "UP" if prob >= 50 else "DOWN"
-        results.append({
-            "Days Ahead": h,
-            "Prediction": prediction,
-            "上昇確率": round(prob),
-        })
+        model.fit(X_train, y_train)
+        prob_up = model.predict_proba(X.iloc[[-1]])[0, 1] * 100
+        prediction = "UP" if prob_up >= 50 else "DOWN"
+
+        train_pred = model.predict(X_train)
+        up_mask = (train_pred == 1) & (y_train == 1)
+        down_mask = (train_pred == 0) & (y_train == 0)
+        up_return = returns_train[up_mask].mean()
+        down_return = returns_train[down_mask].mean()
+        expected_return = up_return if prediction == "UP" else down_return
+        if pd.isna(expected_return):
+            expected_return = 0.0
+
+        results.append(
+            {
+                "予測日数": h,
+                "Prediction": prediction,
+                "上昇確率": round(prob_up),
+                "期待リターン": round(expected_return * 100, 2),
+            }
+        )
         importance_model = model
 
     table = pd.DataFrame(results)
