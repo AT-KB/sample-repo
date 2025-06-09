@@ -52,6 +52,8 @@ def analyze_stock_candlestick(ticker: str):
             interval="1d",
             auto_adjust=False,
         )
+        if isinstance(stock_data.columns, pd.MultiIndex):
+            stock_data.columns = stock_data.columns.droplevel(0)
     except Exception:
         return None, None, "データ取得に失敗しました"
     if stock_data.empty:
