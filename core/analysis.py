@@ -6,6 +6,29 @@ import base64
 import mplfinance as mpf
 import ta
 
+TICKER_NAMES = {
+    "7203": "トヨタ自動車",
+    "7203.T": "トヨタ自動車",
+    "6758": "ソニーグループ",
+    "6758.T": "ソニーグループ",
+    "8591": "オリックス",
+    "8591.T": "オリックス",
+}
+
+
+def get_company_name(ticker: str) -> str:
+    """Return company name if available, otherwise the ticker itself."""
+    ticker_symbol = f"{ticker}.T" if not ticker.endswith(".T") else ticker
+    if ticker in TICKER_NAMES:
+        return TICKER_NAMES[ticker]
+    if ticker_symbol in TICKER_NAMES:
+        return TICKER_NAMES[ticker_symbol]
+    try:
+        info = yf.Ticker(ticker_symbol).info
+        return info.get("shortName") or info.get("longName") or ticker_symbol
+    except Exception:
+        return ticker_symbol
+
 
 def analyze_stock(ticker: str):
     """Fetch data and return base64 chart image and HTML table."""
@@ -35,7 +58,8 @@ def analyze_stock(ticker: str):
 
     table_html = (
         df.tail(5)[["Close", "MA5", "MA25"]]
-        .round(2)
+        .round(0)
+        .astype(int)
         .to_html(classes="table table-striped")
     )
 
@@ -97,7 +121,7 @@ def analyze_stock_candlestick(ticker: str):
             title=f"{ticker_symbol} Daily Candlestick, MACD & RSI",
             style="yahoo",
             returnfig=True,
-            figsize=(12, 10),
+            figsize=(16, 10),
             panel_ratios=(3, 1, 1, 1),
         )
     except Exception as e:
@@ -116,7 +140,8 @@ def analyze_stock_candlestick(ticker: str):
 
     table_html = (
         stock_data.tail(5)[["Close", "MA5", "MA25", "MA75", "MACD", "MACD_signal", "RSI"]]
-        .round(2)
+        .round(0)
+        .astype(int)
         .to_html(classes="table table-striped")
     )
 
@@ -169,14 +194,14 @@ def predict_next_move(ticker: str):
     model.fit(X_train, y_train)
 
     latest_features = X.iloc[[-1]]
-    prob = model.predict_proba(latest_features)[0, 1]
-    prediction = "UP" if prob >= 0.5 else "DOWN"
+    prob = model.predict_proba(latest_features)[0, 1] * 100
+    prediction = "UP" if prob >= 50 else "DOWN"
 
     table = pd.DataFrame(
         {
             "Next Day": [df.index[-1] + pd.Timedelta(days=1)],
             "Prediction": [prediction],
-            "Probability": [round(prob, 4)],
+            "上昇確率": [round(prob)],
         }
     )
     return table.to_html(classes="table table-striped", index=False)
@@ -210,13 +235,12 @@ def predict_future_moves(ticker: str):
         results.append({
             "Days Ahead": h,
             "Prediction": prediction,
-            "Probability (%)": round(prob, 2),
+            "上昇確率": round(prob),
         })
         importance_model = model
 
     table = pd.DataFrame(results)
-    prob_col = "Probability (%)<br><small>これは翌営業日に株価が上昇する確率です</small>"
-    table.rename(columns={"Probability (%)": prob_col}, inplace=True)
+    prob_col = "上昇確率"
 
     def highlight(val: float) -> str:
         if val >= 70:

@@ -5,6 +5,7 @@ from .analysis import (
     generate_stock_plot,
     predict_next_move,
     predict_future_moves,
+    get_company_name,
 )
 
 
@@ -35,6 +36,7 @@ def candlestick_analysis_view(request):
         chart_data, table_html, warning = analyze_stock_candlestick(ticker)
         prediction_table = None
         importance_table = None
+        company_name = get_company_name(ticker)
         if warning is None:
             prediction_table, importance_table = predict_future_moves(ticker)
         return {
@@ -43,6 +45,7 @@ def candlestick_analysis_view(request):
             "prediction_table": prediction_table,
             "importance_table": importance_table,
             "warning": warning,
+            "company_name": company_name,
         }
 
     data1 = fetch_data(ticker1)
@@ -53,6 +56,8 @@ def candlestick_analysis_view(request):
         "ticker2": ticker2,
         "data1": data1,
         "data2": data2,
+        "company1": data1.get("company_name"),
+        "company2": data2.get("company_name"),
     }
     return render(request, "core/candlestick_analysis.html", context)
 
