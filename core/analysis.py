@@ -157,7 +157,7 @@ def predict_future_moves(ticker: str):
     ticker_symbol = f"{ticker}.T" if not ticker.endswith('.T') else ticker
     df = yf.download(ticker_symbol, period="2y", interval="1d")
     if len(df) < 30:
-        return None
+        return (None, None)
 
     df["Return"] = df["Close"].pct_change()
     for i in range(1, 6):
