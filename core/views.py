@@ -15,7 +15,7 @@ def stock_analysis_view(request):
 
     ticker = request.GET.get("ticker", "").strip()
     if ticker:
-        chart_data, table_html = analyze_stock(ticker)
+        chart_data, table_html, _ = analyze_stock(ticker)
 
     context = {
         "ticker": ticker,
