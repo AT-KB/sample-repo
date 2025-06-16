@@ -51,6 +51,9 @@ def _load_fundamentals(ticker_symbol: str) -> pd.DataFrame:
             pb = pd.Series(pb_value, index=eps_q.index)
         df_fund = pd.DataFrame({"eps": eps_q, "pe": pe, "pb": pb})
         df_fund.index = df_fund.index + timedelta(days=1)
+        df_fund.index.name = "date"
+        df_fund = df_fund.reset_index()
+        df_fund = df_fund.set_index("date")
         return df_fund
     except Exception:
         return pd.DataFrame()
