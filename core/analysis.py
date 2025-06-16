@@ -5,6 +5,7 @@ from io import BytesIO
 import base64
 import mplfinance as mpf
 import ta
+from datetime import timedelta
 from lightgbm import LGBMClassifier
 from sklearn.model_selection import TimeSeriesSplit
 
@@ -16,6 +17,43 @@ TICKER_NAMES = {
     "8591": "オリックス",
     "8591.T": "オリックス",
 }
+
+
+def _load_fundamentals(ticker_symbol: str) -> pd.DataFrame:
+    """Return EPS, PE, PB data indexed by announcement date."""
+    try:
+        tkr = yf.Ticker(ticker_symbol)
+        eps_q = tkr.quarterly_earnings["Earnings"]
+        if eps_q.empty:
+            return pd.DataFrame()
+        price_on_announce = yf.download(
+            ticker_symbol,
+            start=eps_q.index.min(),
+            end=eps_q.index.max() + timedelta(days=2),
+            interval="1d",
+            auto_adjust=False,
+        )["Close"]
+        pe = price_on_announce.reindex(eps_q.index, method="ffill") / eps_q
+        info = tkr.info
+        equity = None
+        try:
+            equity = tkr.quarterly_balance_sheet.loc[
+                "Total Stockholder Equity"
+            ]
+        except Exception:
+            equity = None
+        shares = info.get("sharesOutstanding")
+        if equity is not None and shares:
+            book_value_per_share = equity / shares
+            pb = price_on_announce.reindex(eps_q.index, method="ffill") / book_value_per_share
+        else:
+            pb_value = info.get("priceToBook")
+            pb = pd.Series(pb_value, index=eps_q.index)
+        df_fund = pd.DataFrame({"eps": eps_q, "pe": pe, "pb": pb})
+        df_fund.index = df_fund.index + timedelta(days=1)
+        return df_fund
+    except Exception:
+        return pd.DataFrame()
 
 
 def get_company_name(ticker: str) -> str:
@@ -187,16 +225,25 @@ def predict_future_moves(ticker: str, horizons=None):
     if len(df) < 30:
         return (None, None)
 
+    fund = _load_fundamentals(ticker_symbol)
+    df = df.merge(fund, left_index=True, right_index=True, how="left")
+    if fund.empty:
+        df[["eps", "pe", "pb"]] = df[["Close"]].pct_change() * 0
+        df[["eps", "pe", "pb"]].fillna(0, inplace=True)
+    else:
+        df[["eps", "pe", "pb"]] = df[["eps", "pe", "pb"]].ffill()
+
     if horizons is None:
         horizons = [1, 7, 28]
 
     df["Return"] = df["Close"].pct_change()
     for i in range(1, 6):
         df[f"lag_{i}"] = df["Return"].shift(i)
+    df.dropna(subset=["eps", "pe", "pb"], inplace=True)
     df.dropna(inplace=True)
 
-    X = df[[f"lag_{i}" for i in range(1, 6)]]
-    X.columns = [f"lag_{i}" for i in range(1, 6)]
+    feature_cols = [f"lag_{i}" for i in range(1, 6)] + ["eps", "pe", "pb"]
+    X = df[feature_cols]
     results = []
     tscv = TimeSeriesSplit(n_splits=5)
 
