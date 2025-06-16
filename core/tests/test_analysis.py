@@ -21,6 +21,14 @@ from core.analysis import (
 
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "sample_prices.csv"
 SAMPLE_DF = pd.read_csv(FIXTURE_PATH, index_col="Date", parse_dates=True)
+SAMPLE_FUND = pd.DataFrame(
+    {
+        "eps": 0.1,
+        "pe": 15.0,
+        "pb": 1.0,
+    },
+    index=SAMPLE_DF.index,
+)
 
 
 class AnalysisTests(SimpleTestCase):
@@ -31,8 +39,9 @@ class AnalysisTests(SimpleTestCase):
         self.assertTrue(chart.startswith("iVBOR"))
         self.assertIn("<table", table)
 
+    @patch("core.analysis._load_fundamentals", return_value=SAMPLE_FUND.copy())
     @patch("yfinance.download", return_value=SAMPLE_DF.copy())
-    def test_prediction_generation(self, mock_download):
+    def test_prediction_generation(self, mock_download, mock_fund):
         prediction_html, result_none = predict_future_moves("7203")
         self.assertIn("<table", prediction_html)
         self.assertIn("Prediction", prediction_html)
@@ -52,14 +61,16 @@ class AnalysisTests(SimpleTestCase):
         self.assertIsNone(chart)
         self.assertIsNone(table)
 
+    @patch("core.analysis._load_fundamentals", return_value=SAMPLE_FUND.copy())
     @patch("yfinance.download", return_value=SAMPLE_DF.copy())
-    def test_predict_next_move_with_data(self, mock_download):
+    def test_predict_next_move_with_data(self, mock_download, mock_fund):
         html = predict_next_move("7203")
         self.assertIsNotNone(html)
         self.assertIn("<table", html)
 
+    @patch("core.analysis._load_fundamentals", return_value=SAMPLE_FUND.copy())
     @patch("yfinance.download", return_value=pd.DataFrame())
-    def test_predict_next_move_with_no_data(self, mock_download):
+    def test_predict_next_move_with_no_data(self, mock_download, mock_fund):
         html = predict_next_move("7203")
         self.assertIsNone(html)
 
