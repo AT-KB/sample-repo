@@ -25,6 +25,10 @@
       <h3>Latest Data</h3>
       {{ data1.table_html|safe }}
     {% endif %}
+    {% if data1.fund_table_html %}
+      <h3>Financials</h3>
+      {{ data1.fund_table_html|safe }}
+    {% endif %}
       {% if data1.prediction_table %}
         <h3>Predictions</h3>
         {{ data1.prediction_table|safe }}
@@ -41,6 +45,10 @@
     {% if data2.table_html %}
       <h3>Latest Data</h3>
       {{ data2.table_html|safe }}
+    {% endif %}
+    {% if data2.fund_table_html %}
+      <h3>Financials</h3>
+      {{ data2.fund_table_html|safe }}
     {% endif %}
       {% if data2.prediction_table %}
         <h3>Predictions</h3>

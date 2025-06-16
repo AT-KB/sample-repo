@@ -83,9 +83,10 @@ class AnalysisTests(SimpleTestCase):
         self.assertIn("chart", response.content.decode())
         self.assertIn("<table", response.content.decode())
 
+    @patch("core.views._load_financial_metrics", return_value=pd.DataFrame())
     @patch("core.views.predict_future_moves")
     @patch("core.views.analyze_stock_candlestick")
-    def test_candlestick_view_handles_two_tickers(self, mock_analyze, mock_predict):
+    def test_candlestick_view_handles_two_tickers(self, mock_analyze, mock_predict, mock_fin):
         mock_analyze.return_value = ("chart", "<table></table>", None)
         mock_predict.return_value = ("<table></table>", None)
         response = self.client.get(
@@ -98,3 +99,30 @@ class AnalysisTests(SimpleTestCase):
         self.assertEqual(mock_predict.call_count, 2)
         content = response.content.decode()
         self.assertIn("chart", content)
+
+    @patch("yfinance.Ticker")
+    def test_company_name_truncated(self, mock_ticker):
+        mock_ticker.return_value.info = {"shortName": "ABCDEFGHIJKL"}
+        from core.analysis import get_company_name
+
+        name = get_company_name("9999")
+        self.assertEqual(name, "ABCDEFGHI")
+
+    @patch("core.views._load_financial_metrics")
+    @patch("core.views.predict_future_moves")
+    @patch("core.views.analyze_stock_candlestick")
+    def test_candlestick_view_includes_financials(self, mock_analyze, mock_predict, mock_fin):
+        mock_analyze.return_value = ("chart", "<table></table>", None)
+        mock_predict.return_value = ("<table></table>", None)
+        mock_fin.return_value = pd.DataFrame({
+            "Total Revenue": [1],
+            "Cost Of Revenue": [2],
+            "Selling General Administrative": [3],
+            "Operating Income": [4],
+            "Net Income": [5],
+        })
+        response = self.client.get("/candlestick/?ticker1=7203", HTTP_HOST="localhost")
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn("Total Revenue", content)
+
