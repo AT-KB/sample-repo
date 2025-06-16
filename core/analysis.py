@@ -56,18 +56,33 @@ def _load_fundamentals(ticker_symbol: str) -> pd.DataFrame:
         return pd.DataFrame()
 
 
-def get_company_name(ticker: str) -> str:
-    """Return company name if available, otherwise the ticker itself."""
-    ticker_symbol = f"{ticker}.T" if not ticker.endswith(".T") else ticker
-    if ticker in TICKER_NAMES:
-        return TICKER_NAMES[ticker]
-    if ticker_symbol in TICKER_NAMES:
-        return TICKER_NAMES[ticker_symbol]
+def _load_financial_metrics(ticker_symbol: str) -> pd.DataFrame:
+    """Return selected yearly financial metrics."""
     try:
-        info = yf.Ticker(ticker_symbol).info
-        return info.get("shortName") or info.get("longName") or ticker_symbol
+        df = yf.Ticker(ticker_symbol).financials.T
+        cols = [
+            "Total Revenue",
+            "Cost Of Revenue",
+            "Selling General Administrative",
+            "Operating Income",
+            "Net Income",
+        ]
+        return df[cols]
     except Exception:
-        return ticker_symbol
+        return pd.DataFrame()
+
+
+def get_company_name(ticker: str) -> str:
+    """Return truncated company name if available."""
+    ticker_symbol = f"{ticker}.T" if not ticker.endswith(".T") else ticker
+    name = TICKER_NAMES.get(ticker) or TICKER_NAMES.get(ticker_symbol)
+    if not name:
+        try:
+            info = yf.Ticker(ticker_symbol).info
+            name = info.get("shortName") or info.get("longName") or ticker_symbol
+        except Exception:
+            name = ticker_symbol
+    return str(name)[:9]
 
 
 def analyze_stock(ticker: str):
@@ -130,14 +145,19 @@ def analyze_stock_candlestick(ticker: str):
     if stock_data.empty:
         return None, None, "データ取得に失敗しました"
 
-    stock_data["MA5"] = stock_data["Close"].rolling(window=5).mean()
-    stock_data["MA25"] = stock_data["Close"].rolling(window=25).mean()
-    stock_data["MA75"] = stock_data["Close"].rolling(window=75).mean()
-
     close_series = stock_data["Close"].squeeze()
     stock_data["MACD"] = ta.trend.macd(close_series)
-    stock_data["MACD_signal"] = ta.trend.macd_signal(close_series)
     stock_data["RSI"] = ta.momentum.rsi(close_series)
+
+    fund = _load_fundamentals(ticker_symbol)
+    if not fund.empty:
+        stock_data = stock_data.merge(
+            fund[["pe", "pb"]], left_index=True, right_index=True, how="left"
+        )
+        stock_data[["pe", "pb"]] = stock_data[["pe", "pb"]].ffill()
+    else:
+        stock_data["pe"] = None
+        stock_data["pb"] = None
 
     plot_df = (
         stock_data[["Open", "High", "Low", "Close", "Volume"]]
@@ -148,7 +168,6 @@ def analyze_stock_candlestick(ticker: str):
 
     apds = [
         mpf.make_addplot(stock_data["MACD"], panel=2, color="blue", ylabel="MACD"),
-        mpf.make_addplot(stock_data["MACD_signal"], panel=2, color="orange"),
         mpf.make_addplot(stock_data["RSI"], panel=3, color="purple", ylabel="RSI"),
     ]
 
@@ -156,13 +175,13 @@ def analyze_stock_candlestick(ticker: str):
         fig, ax = mpf.plot(
             plot_df,
             type="candle",
-            mav=(5, 25, 75),
+            mav=(),
             volume=True,
             addplot=apds,
             title=f"{ticker_symbol} Daily Candlestick, MACD & RSI",
             style="yahoo",
             returnfig=True,
-            figsize=(16, 10),
+            figsize=(20, 12),
             panel_ratios=(3, 1, 1, 1),
         )
     except Exception as e:
@@ -180,10 +199,9 @@ def analyze_stock_candlestick(ticker: str):
     chart_data = base64.b64encode(buf.getvalue()).decode("utf-8")
 
     table_html = (
-        stock_data.tail(5)[["Close", "MA5", "MA25", "MA75", "MACD", "MACD_signal", "RSI"]]
-        .round(0)
+        stock_data.tail(5)[["Close", "MACD", "RSI", "pe", "pb"]]
+        .round(2)
         .fillna(0)
-        .astype(int)
         .to_html(classes="table table-striped")
     )
 

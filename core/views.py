@@ -6,6 +6,7 @@ from .analysis import (
     predict_future_moves,
     predict_next_move,
     get_company_name,
+    _load_financial_metrics,
 )
 
 
@@ -36,14 +37,19 @@ def candlestick_analysis_view(request):
         chart_data, table_html, warning = analyze_stock_candlestick(ticker)
         prediction_table = None
         company_name = get_company_name(ticker)
+        fund_table_html = None
         if warning is None:
             prediction_table, _ = predict_future_moves(ticker)
+        fund_df = _load_financial_metrics(ticker)
+        if not fund_df.empty:
+            fund_table_html = fund_df.to_html(classes="table table-striped")
         return {
             "chart_data": chart_data,
             "table_html": table_html,
             "prediction_table": prediction_table,
             "warning": warning,
             "company_name": company_name,
+            "fund_table_html": fund_table_html,
         }
 
     data1 = fetch_data(ticker1)
