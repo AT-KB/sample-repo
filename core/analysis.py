@@ -80,19 +80,27 @@ def _load_fundamentals(ticker_symbol: str) -> pd.DataFrame:
             pb_value = info.get("priceToBook")
             pb = pd.Series(pb_value, index=eps_q.index)
 
+        pe = pe.replace([np.inf, -np.inf], np.nan)
+        pb = pb.replace([np.inf, -np.inf], np.nan)
+
+        if pe.isna().all():
+            trailing_pe = info.get("trailingPE")
+            if trailing_pe is not None:
+                pe = pd.Series(trailing_pe, index=eps_q.index)
+            else:
+                pe = pd.Series(np.nan, index=eps_q.index)
+
+        if pb.isna().all():
+            pb_info = info.get("priceToBook")
+            if pb_info is not None:
+                pb = pd.Series(pb_info, index=eps_q.index)
+            else:
+                pb = pd.Series(np.nan, index=eps_q.index)
+
         df_fund = pd.DataFrame({"eps": eps_q, "pe": pe, "pb": pb})
         df_fund.index = df_fund.index + timedelta(days=1)
         df_fund.index.name = "date"
         df_fund = df_fund.reset_index().set_index("date")
-
-        if df_fund["pe"].isna().all():
-            trailing_pe = info.get("trailingPE")
-            if trailing_pe is not None:
-                df_fund["pe"] = trailing_pe
-        if df_fund["pb"].isna().all():
-            pb_value = info.get("priceToBook")
-            if pb_value is not None:
-                df_fund["pb"] = pb_value
 
         df_fund.ffill(inplace=True)
 
@@ -253,13 +261,10 @@ def analyze_stock_candlestick(ticker: str):
         tbl_cols.append("pe")
     if "pb" in stock_data.columns:
         tbl_cols.append("pb")
-    table_html = (
-        stock_data.tail(5)[tbl_cols]
-        .round(2)
-        .fillna(0)
-        .reset_index()
-        .rename(columns={"index": "date"})
-        .to_html(classes="table table-striped", index=False)
+    table_df = stock_data.tail(5)[tbl_cols].round(0)
+    table_df = table_df.applymap(lambda x: "-" if pd.isna(x) else int(x))
+    table_html = table_df.reset_index().rename(columns={"index": "date"}).to_html(
+        classes="table table-striped", index=False
     )
 
     return chart_data, table_html, None
@@ -401,7 +406,7 @@ def predict_future_moves(ticker: str, horizons=None):
         return f"background-color: rgba(255, 0, 0, {alpha:.2f})"
 
     styled_table = (
-        table.style.map(color_scale, subset=[prob_col])
+        table.style.applymap(color_scale, subset=[prob_col])
         .format({prob_col: "{:.0f}%", "期待リターン": lambda x: f"{x:+.2f}%"})
         .hide(axis="index")
         .set_table_attributes('class="table table-striped"')
