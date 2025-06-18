@@ -82,9 +82,19 @@ def _load_fundamentals(ticker_symbol: str) -> pd.DataFrame:
 
         df_fund = pd.DataFrame({"eps": eps_q, "pe": pe, "pb": pb})
         df_fund.index = df_fund.index + timedelta(days=1)
-        df_fund.ffill(inplace=True)
         df_fund.index.name = "date"
         df_fund = df_fund.reset_index().set_index("date")
+
+        if df_fund["pe"].isna().all():
+            trailing_pe = info.get("trailingPE")
+            if trailing_pe is not None:
+                df_fund["pe"] = trailing_pe
+        if df_fund["pb"].isna().all():
+            pb_value = info.get("priceToBook")
+            if pb_value is not None:
+                df_fund["pb"] = pb_value
+
+        df_fund.ffill(inplace=True)
 
         return df_fund
     except Exception:
@@ -235,9 +245,10 @@ def analyze_stock_candlestick(ticker: str):
 
     table_html = (
         stock_data.tail(5)[["Close", "MACD", "RSI", "pe", "pb"]]
-        .round(0)
+        .round(2)
         .fillna(0)
-        .astype(int)
+        .reset_index()
+        .rename(columns={"index": "date"})
         .to_html(classes="table table-striped", index=False)
     )
 
@@ -377,7 +388,7 @@ def predict_future_moves(ticker: str, horizons=None):
         return f"background-color: rgba(255, 0, 0, {alpha:.2f})"
 
     styled_table = (
-        table.style.applymap(color_scale, subset=[prob_col])
+        table.style.map(color_scale, subset=[prob_col])
         .format({prob_col: "{:.0f}%", "期待リターン": lambda x: f"{x:+.2f}%"})
         .hide(axis="index")
         .set_table_attributes('class="table table-striped"')
