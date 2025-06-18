@@ -192,17 +192,20 @@ class AnalysisTests(SimpleTestCase):
 
     @patch("core.analysis._load_fundamentals")
     @patch("yfinance.download")
-    def test_missing_pb_column(
+    def test_missing_fundamental_columns(
         self, mock_download, mock_fund
     ):
         mock_download.return_value = SAMPLE_DF.copy()
-        fund_no_pb = SAMPLE_FUND.copy().drop(columns=["pb"])
-        mock_fund.return_value = fund_no_pb
+        fund_missing = SAMPLE_FUND.copy().drop(columns=["eps", "pe"])
+        mock_fund.return_value = fund_missing
 
         chart, table, warn = analyze_stock_candlestick("7203")
         self.assertIsNone(warn)
         self.assertIn("<table", table)
-        self.assertNotIn("<th>pb</th>", table.lower())
+        lower = table.lower()
+        self.assertIn("<th>eps</th>", lower)
+        self.assertIn("<th>pe</th>", lower)
+        self.assertNotIn("<th>pb</th>", lower)
 
         html, result_none = predict_future_moves("7203")
         self.assertIn("<table", html)
