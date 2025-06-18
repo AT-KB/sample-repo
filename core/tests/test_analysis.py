@@ -145,3 +145,15 @@ class AnalysisTests(SimpleTestCase):
         self.assertTrue(isinstance(df.index, pd.DatetimeIndex))
         self.assertEqual(df.index.nlevels, 1)
 
+    @patch("core.analysis._load_fundamentals", return_value=SAMPLE_FUND.copy())
+    @patch("yfinance.download")
+    def test_predict_future_moves_handles_multiindex_prices(self, mock_download, mock_fund):
+        mi = pd.MultiIndex.from_product([SAMPLE_DF.index, ["A"]])
+        df = SAMPLE_DF.copy()
+        df.index = mi
+        mock_download.return_value = df
+
+        html, result_none = predict_future_moves("7203")
+        self.assertIn("<table", html)
+        self.assertIsNone(result_none)
+
