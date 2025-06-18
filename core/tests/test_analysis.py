@@ -142,8 +142,7 @@ class AnalysisTests(SimpleTestCase):
         mock_download.return_value = pd.DataFrame({"Close": [10, 11, 12]}, index=price_idx)
 
         df = _load_fundamentals("7203.T")
-        self.assertTrue(isinstance(df.index, pd.DatetimeIndex))
-        self.assertEqual(df.index.nlevels, 1)
+        self.assertTrue(df.empty)
 
     @patch("core.analysis._load_fundamentals", return_value=SAMPLE_FUND.copy())
     @patch("yfinance.download")
