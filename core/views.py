@@ -1,33 +1,13 @@
 from django.shortcuts import render
 from .analysis import (
-    analyze_stock,
     analyze_stock_candlestick,
-    generate_stock_plot,
     predict_future_moves,
-    predict_next_move,
     get_company_name,
     _load_financial_metrics,
 )
 
 
-def stock_analysis_view(request):
-    chart_data = None
-    table_html = None
-    ticker = ""
-
-    ticker = request.GET.get("ticker", "").strip()
-    if ticker:
-        chart_data, table_html, _ = analyze_stock(ticker)
-
-    context = {
-        "ticker": ticker,
-        "chart_data": chart_data,
-        "table_html": table_html,
-    }
-    return render(request, "core/stock_analysis.html", context)
-
-
-def candlestick_analysis_view(request):
+def main_analysis_view(request):
     ticker1 = request.GET.get("ticker1", "").strip()
     ticker2 = request.GET.get("ticker2", "").strip()
 
@@ -64,19 +44,3 @@ def candlestick_analysis_view(request):
         "company2": data2.get("company_name"),
     }
     return render(request, "core/candlestick_analysis.html", context)
-
-
-def analysis_view(request):
-    chart_data = None
-    prediction_table = None
-    ticker = request.GET.get("ticker", "").strip()
-    if ticker:
-        chart_data = generate_stock_plot(ticker)
-        prediction_table, _ = predict_future_moves(ticker)
-
-    context = {
-        "ticker": ticker,
-        "chart_data": chart_data,
-        "prediction_table": prediction_table,
-    }
-    return render(request, "core/analysis.html", context)

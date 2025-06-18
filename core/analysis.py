@@ -23,12 +23,11 @@ def _load_fundamentals(ticker_symbol: str) -> pd.DataFrame:
     """Return EPS, PE, PB data indexed by announcement date."""
     try:
         tkr = yf.Ticker(ticker_symbol)
-        # quarterly_earningsからEPSデータを取得
         eps_q = tkr.quarterly_earnings["Earnings"]
-        if eps_q.empty:
+        # マルチインデックスは扱わない
+        if eps_q.empty or isinstance(eps_q.index, pd.MultiIndex):
             return pd.DataFrame()
 
-        # 必要な期間の株価データを一度だけ効率的に取得
         start_date = eps_q.index.min()
         end_date = eps_q.index.max() + timedelta(days=2)
         price_data = yf.download(
@@ -41,11 +40,9 @@ def _load_fundamentals(ticker_symbol: str) -> pd.DataFrame:
         if price_data.empty:
             return pd.DataFrame()
 
-        # 発表日の株価を取得し、PEを計算
         price_on_announce = price_data["Close"].reindex(eps_q.index, method="ffill")
         pe = price_on_announce / eps_q
 
-        # PBRを計算（取得できなければフォールバック）
         info = tkr.info
         equity = tkr.quarterly_balance_sheet.get("Total Stockholder Equity")
         shares = info.get("sharesOutstanding")
@@ -59,8 +56,7 @@ def _load_fundamentals(ticker_symbol: str) -> pd.DataFrame:
         df_fund = pd.DataFrame({"eps": eps_q, "pe": pe, "pb": pb})
         df_fund.index = df_fund.index + timedelta(days=1)
 
-        # ★★★★★ MergeErrorを解決する最重要の修正点 ★★★★★
-        # インデックスを一度リセットして、単一階層に戻す
+        # インデックスを一度リセットして単一階層に戻す
         df_fund.index.name = "date"
         df_fund = df_fund.reset_index()
         df_fund = df_fund.set_index("date")

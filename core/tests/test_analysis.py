@@ -75,10 +75,10 @@ class AnalysisTests(SimpleTestCase):
         html = predict_next_move("7203")
         self.assertIsNone(html)
 
-    @patch("core.views.analyze_stock")
-    def test_stock_analysis_view_uses_analyze_stock(self, mock_analyze):
+    @patch("core.views.analyze_stock_candlestick")
+    def test_main_analysis_view_uses_analyze_stock_candlestick(self, mock_analyze):
         mock_analyze.return_value = ("chart", "<table></table>", None)
-        response = self.client.get("/stock/?ticker=7203", HTTP_HOST="localhost")
+        response = self.client.get("/?ticker1=7203", HTTP_HOST="localhost")
         self.assertEqual(response.status_code, 200)
         mock_analyze.assert_called_once_with("7203")
         self.assertIn("chart", response.content.decode())
@@ -91,7 +91,7 @@ class AnalysisTests(SimpleTestCase):
         mock_analyze.return_value = ("chart", "<table></table>", None)
         mock_predict.return_value = ("<table></table>", None)
         response = self.client.get(
-            "/candlestick/?ticker1=7203&ticker2=6758", HTTP_HOST="localhost"
+            "/?ticker1=7203&ticker2=6758", HTTP_HOST="localhost"
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(mock_analyze.call_count, 2)
@@ -122,7 +122,7 @@ class AnalysisTests(SimpleTestCase):
             "Operating Income": [4],
             "Net Income": [5],
         })
-        response = self.client.get("/candlestick/?ticker1=7203", HTTP_HOST="localhost")
+        response = self.client.get("/?ticker1=7203", HTTP_HOST="localhost")
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
         self.assertIn("Total Revenue", content)
