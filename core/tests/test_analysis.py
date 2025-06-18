@@ -133,6 +133,45 @@ class AnalysisTests(SimpleTestCase):
         content = response.content.decode()
         self.assertIn("Total Revenue", content)
 
+    @patch("core.views._load_annual_financials")
+    @patch("core.views._load_quarterly_financials")
+    @patch("core.views._load_financial_metrics", return_value=pd.DataFrame())
+    @patch("core.views.predict_future_moves")
+    @patch("core.views.analyze_stock_candlestick")
+    def test_candlestick_view_shows_quarter_and_annual_financials(
+        self, mock_analyze, mock_predict, mock_fin_metrics, mock_qfin, mock_af
+    ):
+        mock_analyze.return_value = ("chart", "<table></table>", None)
+        mock_predict.return_value = ("<table></table>", None)
+        q_df = pd.DataFrame(
+            {
+                "Total Revenue": [1],
+                "Cost Of Revenue": [2],
+                "Operating Income": [3],
+                "Net Income": [4],
+                "Operating Margin": [0.3],
+            },
+            index=[pd.to_datetime("2024-03-31")],
+        )
+        a_df = pd.DataFrame(
+            {
+                "Total Revenue": [10],
+                "Cost Of Revenue": [5],
+                "Operating Income": [2],
+                "Net Income": [1],
+                "Operating Margin": [0.2],
+            },
+            index=[pd.to_datetime("2023-12-31")],
+        )
+        mock_qfin.return_value = q_df
+        mock_af.return_value = a_df
+
+        response = self.client.get("/?ticker1=7203", HTTP_HOST="localhost")
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn("Quarterly Financials", content)
+        self.assertIn("Annual Financials", content)
+
     @patch("yfinance.download")
     @patch("yfinance.Ticker")
     def test_load_fundamentals_handles_multiindex(

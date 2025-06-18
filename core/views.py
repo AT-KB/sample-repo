@@ -4,6 +4,8 @@ from .analysis import (
     predict_future_moves,
     get_company_name,
     _load_financial_metrics,
+    _load_quarterly_financials,
+    _load_annual_financials,
 )
 
 
@@ -18,11 +20,31 @@ def main_analysis_view(request):
         prediction_table = None
         company_name = get_company_name(ticker)
         fund_table_html = None
+        quarterly_fin_html = None
+        annual_fin_html = None
         if warning is None:
             prediction_table, _ = predict_future_moves(ticker)
         fund_df = _load_financial_metrics(ticker)
         if not fund_df.empty:
             fund_table_html = fund_df.to_html(classes="table table-striped")
+        q_df = _load_quarterly_financials(ticker)
+        if not q_df.empty:
+            fmt = {c: "{:,.0f}" for c in q_df.columns}
+            fmt["Operating Margin"] = "{:,.1%}"
+            quarterly_fin_html = (
+                q_df.style.format(fmt)
+                .set_table_attributes('class="table table-striped"')
+                .to_html()
+            )
+        a_df = _load_annual_financials(ticker)
+        if not a_df.empty:
+            fmt = {c: "{:,.0f}" for c in a_df.columns}
+            fmt["Operating Margin"] = "{:,.1%}"
+            annual_fin_html = (
+                a_df.style.format(fmt)
+                .set_table_attributes('class="table table-striped"')
+                .to_html()
+            )
         return {
             "chart_data": chart_data,
             "table_html": table_html,
@@ -30,6 +52,8 @@ def main_analysis_view(request):
             "warning": warning,
             "company_name": company_name,
             "fund_table_html": fund_table_html,
+            "quarterly_financials_table": quarterly_fin_html,
+            "annual_financials_table": annual_fin_html,
         }
 
     data1 = fetch_data(ticker1)
