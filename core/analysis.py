@@ -48,7 +48,10 @@ def _load_fundamentals(ticker_symbol: str) -> pd.DataFrame:
         shares = info.get("sharesOutstanding")
         if equity is not None and shares and shares > 0:
             book_value_per_share = equity / shares
-            pb = price_on_announce / book_value_per_share
+            # eps_qと同じ単一階層の日付インデックスに揃える
+            pb = price_on_announce / book_value_per_share.reindex(
+                eps_q.index, method="ffill"
+            )
         else:
             pb_value = info.get("priceToBook")
             pb = pd.Series(pb_value, index=eps_q.index)
