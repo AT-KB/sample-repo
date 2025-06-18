@@ -257,6 +257,8 @@ def predict_future_moves(ticker: str, horizons=None):
     """Predict stock direction for multiple days ahead with expected return."""
     ticker_symbol = f"{ticker}.T" if not ticker.endswith('.T') else ticker
     df = yf.download(ticker_symbol, period="2y", interval="1d", auto_adjust=False)
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.get_level_values(0)
     if len(df) < 30:
         return (None, None)
 

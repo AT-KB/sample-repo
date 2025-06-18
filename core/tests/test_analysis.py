@@ -175,3 +175,17 @@ class AnalysisTests(SimpleTestCase):
         html, result_none = predict_future_moves("7203")
         self.assertIn("<table", html)
         self.assertIsNone(result_none)
+
+    @patch("core.analysis._load_fundamentals", return_value=SAMPLE_FUND.copy())
+    @patch("yfinance.download")
+    def test_predict_future_moves_handles_multiindex_columns(
+        self, mock_download, mock_fund
+    ):
+        mi_cols = pd.MultiIndex.from_product([SAMPLE_DF.columns, ["A"]])
+        df = SAMPLE_DF.copy()
+        df.columns = mi_cols
+        mock_download.return_value = df
+
+        html, result_none = predict_future_moves("7203")
+        self.assertIn("<table", html)
+        self.assertIsNone(result_none)
