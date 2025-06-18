@@ -7,7 +7,8 @@ import mplfinance as mpf
 import pandas as pd
 import ta
 import yfinance as yf
-from lightgbm import LGBMClassifier
+import numpy as np
+from lightgbm import LGBMRegressor
 from sklearn.model_selection import TimeSeriesSplit
 
 TICKER_NAMES = {
@@ -316,30 +317,43 @@ def predict_future_moves(ticker: str, horizons=None):
     results = []
     tscv = TimeSeriesSplit(n_splits=5)
 
+    def custom_objective(y_true, y_pred):
+        residual = y_true - y_pred
+        grad = -2 * residual
+        hess = np.full_like(y_true, 2)
+        return grad, hess
+
+    def custom_eval(y_true, y_pred):
+        rmse = np.sqrt(np.mean((y_true - y_pred) ** 2))
+        return "custom_rmse", rmse, False
+
     for h in horizons:
-        df[f"target_{h}"] = (df["Close"].shift(-h) > df["Close"]).astype(int)
-        df[f"future_return_{h}"] = df["Close"].shift(-h) / df["Close"] - 1
-        y = df[f"target_{h}"]
+        df[f"target_{h}"] = np.log(df["Close"].shift(-h) / df["Close"])
+        df[f"future_return_{h}"] = df[f"target_{h}"]
+        tmp = pd.concat([X, df[f"target_{h}"]], axis=1).dropna()
+        X_h = tmp[feature_cols]
+        y_h = tmp[f"target_{h}"]
         model = None
-        returns_train = None
         train_index = None
-        for train_index, _ in tscv.split(X):
-            model = LGBMClassifier(random_state=0)
-            model.fit(X.iloc[train_index], y.iloc[train_index])
-            returns_train = df[f"future_return_{h}"].iloc[train_index]
+        for train_index, _ in tscv.split(X_h):
+            model = LGBMRegressor(
+                random_state=0,
+                objective=custom_objective,
+                min_data_in_bin=1,
+                min_data_in_leaf=1,
+            )
+            model.fit(
+                X_h.iloc[train_index],
+                y_h.iloc[train_index],
+                eval_set=[(X_h.iloc[train_index], y_h.iloc[train_index])],
+                eval_metric=custom_eval,
+            )
         if model is None:
             continue
-        prob_up = model.predict_proba(X.iloc[[-1]])[0, 1] * 100
-        prediction = "UP" if prob_up >= 50 else "DOWN"
-
-        train_pred = model.predict(X.iloc[train_index])
-        up_mask = (train_pred == 1) & (y.iloc[train_index] == 1)
-        down_mask = (train_pred == 0) & (y.iloc[train_index] == 0)
-        up_return = returns_train[up_mask].mean()
-        down_return = returns_train[down_mask].mean()
-        expected_return = up_return if prediction == "UP" else down_return
-        if pd.isna(expected_return):
-            expected_return = 0.0
+        pred_return = float(model.predict(X.iloc[[-1]]))
+        prob_up = 100 * (1 / (1 + np.exp(-pred_return)))
+        prediction = "UP" if pred_return >= 0 else "DOWN"
+        expected_return = pred_return
 
         results.append(
             {
