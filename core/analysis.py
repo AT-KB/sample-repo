@@ -271,7 +271,10 @@ def predict_future_moves(ticker: str, horizons=None):
 
     df.index.name = "date"
     fund.index.name = "date"
-    df = df.merge(fund, how="left", left_index=True, right_index=True)
+    df = df.reset_index()
+    fund = fund.reset_index()
+    df = df.merge(fund, how="left", on="date")
+    df.set_index("date", inplace=True)
     if fund.empty:
         df[["eps", "pe", "pb"]] = df[["Close"]].pct_change() * 0
         df[["eps", "pe", "pb"]].fillna(0, inplace=True)
