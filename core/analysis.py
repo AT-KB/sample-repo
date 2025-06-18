@@ -262,6 +262,14 @@ def predict_future_moves(ticker: str, horizons=None):
         return (None, None)
 
     fund = _load_fundamentals(ticker_symbol)
+    if isinstance(df.index, pd.MultiIndex):
+        df.index = df.index.get_level_values(0)
+    if isinstance(fund.index, pd.MultiIndex):
+        fund.index = fund.index.get_level_values(0)
+
+    df.index = pd.to_datetime(df.index)
+    fund.index = pd.to_datetime(fund.index)
+
     df.index.name = "date"
     fund.index.name = "date"
     df = (
