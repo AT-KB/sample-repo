@@ -204,16 +204,18 @@ def analyze_stock_candlestick(ticker: str):
 
     fund = _load_fundamentals(ticker_symbol)
     if not fund.empty:
-        merge_cols = [c for c in ["pe", "pb"] if c in fund.columns]
+        merge_cols = [c for c in ["eps", "pe"] if c in fund.columns]
         stock_data = stock_data.merge(
             fund[merge_cols], left_index=True, right_index=True, how="left"
         )
         for c in merge_cols:
             stock_data[c] = stock_data[c].ffill()
     else:
+        stock_data["eps"] = None
         stock_data["pe"] = None
-        stock_data["pb"] = None
 
+    if "eps" not in stock_data.columns:
+        stock_data["eps"] = None
     if "pe" not in stock_data.columns:
         stock_data["pe"] = None
 
@@ -256,11 +258,7 @@ def analyze_stock_candlestick(ticker: str):
     buf.seek(0)
     chart_data = base64.b64encode(buf.getvalue()).decode("utf-8")
 
-    tbl_cols = ["Close", "MACD", "RSI"]
-    if "pe" in stock_data.columns:
-        tbl_cols.append("pe")
-    if "pb" in stock_data.columns:
-        tbl_cols.append("pb")
+    tbl_cols = ["Close", "MACD", "RSI", "eps", "pe"]
     table_df = stock_data.tail(5)[tbl_cols].round(0)
     table_df = table_df.applymap(lambda x: "-" if pd.isna(x) else int(x))
     table_html = table_df.reset_index().rename(columns={"index": "date"}).to_html(
