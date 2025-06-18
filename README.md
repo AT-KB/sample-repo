@@ -37,7 +37,9 @@ git add .
 git commit -m "Initial commit"
 ```
 
-For local development, create a `.env` file at the project root (next to `manage.py`) and define the following variables:
+For local development, create a `.env` file at the project root (next to `manage.py`).
+This file is listed in `.gitignore`, so it will not be committed to the repository.
+Add the following environment variables:
 
 ```bash
 SECRET_KEY=d^2$4jbvh*ihfkdupc(p#6q_i6trs!$x&&19+i*fj3hfh9u&cr
@@ -57,6 +59,9 @@ JQUANTS_TOKEN=your-token  # optional
 | `ALLOWED_HOSTS` | `ALLOWED HOSTS` |
 
 Place the file in the root directory so Django can load these settings. `SECRET_KEY` is a random string for cryptographic signing, `DATABASE_URL` specifies your database connection, `DEBUG` turns debug mode on or off, and `ALLOWED_HOSTS` lists valid domain names. `JQUANTS_TOKEN` enables optional J-Quants features.
+
+Required variables: `SECRET_KEY`, `DATABASE_URL`, `DEBUG`, `ALLOWED_HOSTS`.
+Optional variable: `JQUANTS_TOKEN`.
 
 Install dependencies and run the server:
 
