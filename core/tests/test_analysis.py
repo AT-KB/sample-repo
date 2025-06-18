@@ -8,10 +8,10 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myapp.settings")
 os.environ.setdefault("SECRET_KEY", "dummy")
 os.environ.setdefault("DEBUG", "True")
 
-import django
-django.setup()
+import django  # noqa: E402
+django.setup()  # noqa: E402
 
-from core.analysis import (
+from core.analysis import (  # noqa: E402
     analyze_stock,
     analyze_stock_candlestick,
     predict_future_moves,
@@ -87,7 +87,9 @@ class AnalysisTests(SimpleTestCase):
     @patch("core.views._load_financial_metrics", return_value=pd.DataFrame())
     @patch("core.views.predict_future_moves")
     @patch("core.views.analyze_stock_candlestick")
-    def test_candlestick_view_handles_two_tickers(self, mock_analyze, mock_predict, mock_fin):
+    def test_candlestick_view_handles_two_tickers(
+        self, mock_analyze, mock_predict, mock_fin
+    ):
         mock_analyze.return_value = ("chart", "<table></table>", None)
         mock_predict.return_value = ("<table></table>", None)
         response = self.client.get(
@@ -112,7 +114,9 @@ class AnalysisTests(SimpleTestCase):
     @patch("core.views._load_financial_metrics")
     @patch("core.views.predict_future_moves")
     @patch("core.views.analyze_stock_candlestick")
-    def test_candlestick_view_includes_financials(self, mock_analyze, mock_predict, mock_fin):
+    def test_candlestick_view_includes_financials(
+        self, mock_analyze, mock_predict, mock_fin
+    ):
         mock_analyze.return_value = ("chart", "<table></table>", None)
         mock_predict.return_value = ("<table></table>", None)
         mock_fin.return_value = pd.DataFrame({
@@ -122,31 +126,47 @@ class AnalysisTests(SimpleTestCase):
             "Operating Income": [4],
             "Net Income": [5],
         })
-        response = self.client.get("/?ticker1=7203", HTTP_HOST="localhost")
+        response = self.client.get(
+            "/?ticker1=7203", HTTP_HOST="localhost"
+        )
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
         self.assertIn("Total Revenue", content)
 
     @patch("yfinance.download")
     @patch("yfinance.Ticker")
-    def test_load_fundamentals_handles_multiindex(self, mock_ticker, mock_download):
+    def test_load_fundamentals_handles_multiindex(
+        self, mock_ticker, mock_download
+    ):
         dates = pd.to_datetime(["2020-03-31", "2020-06-30"])
         mi = pd.MultiIndex.from_arrays([dates, ["A", "B"]])
-        mock_ticker.return_value.quarterly_earnings = pd.DataFrame({"Earnings": [1, 2]}, index=mi)
-        mock_ticker.return_value.info = {"sharesOutstanding": 1000, "priceToBook": 1.0}
+        mock_ticker.return_value.quarterly_earnings = pd.DataFrame(
+            {"Earnings": [1, 2]}, index=mi
+        )
+        mock_ticker.return_value.info = {
+            "sharesOutstanding": 1000,
+            "priceToBook": 1.0,
+        }
         mock_ticker.return_value.quarterly_balance_sheet = pd.DataFrame(
-            {pd.to_datetime("2020-03-31"): [1000], pd.to_datetime("2020-06-30"): [1000]},
+            {
+                pd.to_datetime("2020-03-31"): [1000],
+                pd.to_datetime("2020-06-30"): [1000],
+            },
             index=["Total Stockholder Equity"],
         )
         price_idx = pd.date_range("2020-03-30", periods=3)
-        mock_download.return_value = pd.DataFrame({"Close": [10, 11, 12]}, index=price_idx)
+        mock_download.return_value = pd.DataFrame(
+            {"Close": [10, 11, 12]}, index=price_idx
+        )
 
         df = _load_fundamentals("7203.T")
         self.assertTrue(df.empty)
 
     @patch("core.analysis._load_fundamentals", return_value=SAMPLE_FUND.copy())
     @patch("yfinance.download")
-    def test_predict_future_moves_handles_multiindex_prices(self, mock_download, mock_fund):
+    def test_predict_future_moves_handles_multiindex_prices(
+        self, mock_download, mock_fund
+    ):
         mi = pd.MultiIndex.from_product([SAMPLE_DF.index, ["A"]])
         df = SAMPLE_DF.copy()
         df.index = mi
@@ -155,4 +175,3 @@ class AnalysisTests(SimpleTestCase):
         html, result_none = predict_future_moves("7203")
         self.assertIn("<table", html)
         self.assertIsNone(result_none)
-
