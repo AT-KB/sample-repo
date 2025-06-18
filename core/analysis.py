@@ -28,10 +28,25 @@ def _load_fundamentals(ticker_symbol: str) -> pd.DataFrame:
     """Return EPS, PE, PB data indexed by announcement date."""
     try:
         tkr = yf.Ticker(ticker_symbol)
-        eps_q = tkr.quarterly_earnings["Earnings"]
-        # マルチインデックスは扱わない
-        if eps_q.empty or isinstance(eps_q.index, pd.MultiIndex):
-            return pd.DataFrame()
+        info = tkr.info
+        eps_q = None
+        if getattr(tkr, "quarterly_earnings", None) is not None:
+            qe = tkr.quarterly_earnings
+            if (
+                isinstance(qe, pd.DataFrame)
+                and not qe.empty
+                and not isinstance(qe.index, pd.MultiIndex)
+                and "Earnings" in qe
+            ):
+                eps_q = qe["Earnings"]
+        if eps_q is None or eps_q.empty:
+            trailing_eps = info.get("trailingEps")
+            if trailing_eps is None:
+                return pd.DataFrame()
+            eps_q = pd.Series(
+                trailing_eps / 4,
+                index=[pd.to_datetime("today").normalize()],
+            )
 
         start_date = eps_q.index.min() - timedelta(days=2)
         end_date = eps_q.index.max() + timedelta(days=2)
@@ -50,8 +65,10 @@ def _load_fundamentals(ticker_symbol: str) -> pd.DataFrame:
         )
         pe = price_on_announce / eps_q
 
-        info = tkr.info
-        equity = tkr.quarterly_balance_sheet.get("Total Stockholder Equity")
+        qbs = tkr.quarterly_balance_sheet
+        equity = None
+        if isinstance(qbs, pd.DataFrame) and "Total Stockholder Equity" in qbs.index:
+            equity = qbs.loc["Total Stockholder Equity"]
         shares = info.get("sharesOutstanding")
         if equity is not None and shares and shares > 0:
             book_value_per_share = equity / shares
@@ -133,7 +150,7 @@ def analyze_stock(ticker: str):
         .round(0)
         .fillna(0)
         .astype(int)
-        .to_html(classes="table table-striped")
+        .to_html(classes="table table-striped", index=False)
     )
 
     return chart_data, table_html, None
@@ -217,9 +234,10 @@ def analyze_stock_candlestick(ticker: str):
 
     table_html = (
         stock_data.tail(5)[["Close", "MACD", "RSI", "pe", "pb"]]
-        .round(2)
+        .round(0)
         .fillna(0)
-        .to_html(classes="table table-striped")
+        .astype(int)
+        .to_html(classes="table table-striped", index=False)
     )
 
     return chart_data, table_html, None
