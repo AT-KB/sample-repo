@@ -1,11 +1,12 @@
-import pandas as pd
-import yfinance as yf
-import matplotlib.pyplot as plt
-from io import BytesIO
 import base64
-import mplfinance as mpf
-import ta
 from datetime import timedelta
+from io import BytesIO
+
+import matplotlib.pyplot as plt
+import mplfinance as mpf
+import pandas as pd
+import ta
+import yfinance as yf
 from lightgbm import LGBMClassifier
 from sklearn.model_selection import TimeSeriesSplit
 
@@ -16,6 +17,10 @@ TICKER_NAMES = {
     "6758.T": "ソニーグループ",
     "8591": "オリックス",
     "8591.T": "オリックス",
+    "9101": "日本郵船",
+    "9101.T": "日本郵船",
+    "9104": "商船三井",
+    "9104.T": "商船三井",
 }
 
 
@@ -28,7 +33,7 @@ def _load_fundamentals(ticker_symbol: str) -> pd.DataFrame:
         if eps_q.empty or isinstance(eps_q.index, pd.MultiIndex):
             return pd.DataFrame()
 
-        start_date = eps_q.index.min()
+        start_date = eps_q.index.min() - timedelta(days=2)
         end_date = eps_q.index.max() + timedelta(days=2)
         price_data = yf.download(
             ticker_symbol,
@@ -40,7 +45,9 @@ def _load_fundamentals(ticker_symbol: str) -> pd.DataFrame:
         if price_data.empty:
             return pd.DataFrame()
 
-        price_on_announce = price_data["Close"].reindex(eps_q.index, method="ffill")
+        price_on_announce = price_data["Close"].reindex(
+            eps_q.index, method="ffill"
+        )
         pe = price_on_announce / eps_q
 
         info = tkr.info
@@ -48,7 +55,6 @@ def _load_fundamentals(ticker_symbol: str) -> pd.DataFrame:
         shares = info.get("sharesOutstanding")
         if equity is not None and shares and shares > 0:
             book_value_per_share = equity / shares
-            # eps_qと同じ単一階層の日付インデックスに揃える
             pb = price_on_announce / book_value_per_share.reindex(
                 eps_q.index, method="ffill"
             )
@@ -58,11 +64,9 @@ def _load_fundamentals(ticker_symbol: str) -> pd.DataFrame:
 
         df_fund = pd.DataFrame({"eps": eps_q, "pe": pe, "pb": pb})
         df_fund.index = df_fund.index + timedelta(days=1)
-
-        # インデックスを一度リセットして単一階層に戻す
+        df_fund.ffill(inplace=True)
         df_fund.index.name = "date"
-        df_fund = df_fund.reset_index()
-        df_fund = df_fund.set_index("date")
+        df_fund = df_fund.reset_index().set_index("date")
 
         return df_fund
     except Exception:
@@ -197,7 +201,7 @@ def analyze_stock_candlestick(ticker: str):
             figsize=(20, 12),
             panel_ratios=(3, 1, 1, 1),
         )
-    except Exception as e:
+    except Exception:
         return None, None, "チャート生成に失敗しました"
 
     fig.subplots_adjust(hspace=0.15)
@@ -267,10 +271,7 @@ def predict_future_moves(ticker: str, horizons=None):
 
     df.index.name = "date"
     fund.index.name = "date"
-    df = df.reset_index()
-    fund = fund.reset_index()
-    df = df.merge(fund, on="date", how="left")
-    df = df.set_index("date")
+    df = df.merge(fund, how="left", left_index=True, right_index=True)
     if fund.empty:
         df[["eps", "pe", "pb"]] = df[["Close"]].pct_change() * 0
         df[["eps", "pe", "pb"]].fillna(0, inplace=True)
@@ -287,7 +288,8 @@ def predict_future_moves(ticker: str, horizons=None):
     df.dropna(inplace=True)
 
     feature_cols = [f"lag_{i}" for i in range(1, 6)] + ["eps", "pe", "pb"]
-    X = df[feature_cols]
+    X = df[feature_cols].copy()
+    X.columns = [str(c) for c in X.columns]
     results = []
     tscv = TimeSeriesSplit(n_splits=5)
 
