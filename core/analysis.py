@@ -26,34 +26,47 @@ def _load_fundamentals(ticker_symbol: str) -> pd.DataFrame:
         eps_q = tkr.quarterly_earnings["Earnings"]
         if eps_q.empty:
             return pd.DataFrame()
-        price_on_announce = yf.download(
+
+        # 必要な期間の株価データを一度だけ取得
+        start_date = eps_q.index.min()
+        end_date = eps_q.index.max() + timedelta(days=2)
+        price_data = yf.download(
             ticker_symbol,
-            start=eps_q.index.min(),
-            end=eps_q.index.max() + timedelta(days=2),
+            start=start_date,
+            end=end_date,
             interval="1d",
             auto_adjust=False,
-        )["Close"]
-        pe = price_on_announce.reindex(eps_q.index, method="ffill") / eps_q
+        )
+        if price_data.empty:
+            return pd.DataFrame()
+
+        price_on_announce = price_data["Close"].reindex(eps_q.index, method="ffill")
+
+        pe = price_on_announce / eps_q
+
         info = tkr.info
         equity = None
         try:
-            equity = tkr.quarterly_balance_sheet.loc[
-                "Total Stockholder Equity"
-            ]
+            equity = tkr.quarterly_balance_sheet.loc["Total Stockholder Equity"]
         except Exception:
             equity = None
+
         shares = info.get("sharesOutstanding")
-        if equity is not None and shares:
+        if equity is not None and shares and shares > 0:
             book_value_per_share = equity / shares
-            pb = price_on_announce.reindex(eps_q.index, method="ffill") / book_value_per_share
+            pb = price_on_announce / book_value_per_share
         else:
             pb_value = info.get("priceToBook")
             pb = pd.Series(pb_value, index=eps_q.index)
+
         df_fund = pd.DataFrame({"eps": eps_q, "pe": pe, "pb": pb})
         df_fund.index = df_fund.index + timedelta(days=1)
+
+        # インデックスを一度リセットして、単一階層に戻す
         df_fund.index.name = "date"
         df_fund = df_fund.reset_index()
         df_fund = df_fund.set_index("date")
+
         return df_fund
     except Exception:
         return pd.DataFrame()
