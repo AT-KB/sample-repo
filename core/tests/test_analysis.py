@@ -189,3 +189,21 @@ class AnalysisTests(SimpleTestCase):
         html, result_none = predict_future_moves("7203")
         self.assertIn("<table", html)
         self.assertIsNone(result_none)
+
+    @patch("core.analysis._load_fundamentals")
+    @patch("yfinance.download")
+    def test_missing_pb_column(
+        self, mock_download, mock_fund
+    ):
+        mock_download.return_value = SAMPLE_DF.copy()
+        fund_no_pb = SAMPLE_FUND.copy().drop(columns=["pb"])
+        mock_fund.return_value = fund_no_pb
+
+        chart, table, warn = analyze_stock_candlestick("7203")
+        self.assertIsNone(warn)
+        self.assertIn("<table", table)
+        self.assertNotIn("<th>pb</th>", table.lower())
+
+        html, result_none = predict_future_moves("7203")
+        self.assertIn("<table", html)
+        self.assertIsNone(result_none)

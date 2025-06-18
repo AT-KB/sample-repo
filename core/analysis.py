@@ -196,13 +196,18 @@ def analyze_stock_candlestick(ticker: str):
 
     fund = _load_fundamentals(ticker_symbol)
     if not fund.empty:
+        merge_cols = [c for c in ["pe", "pb"] if c in fund.columns]
         stock_data = stock_data.merge(
-            fund[["pe", "pb"]], left_index=True, right_index=True, how="left"
+            fund[merge_cols], left_index=True, right_index=True, how="left"
         )
-        stock_data[["pe", "pb"]] = stock_data[["pe", "pb"]].ffill()
+        for c in merge_cols:
+            stock_data[c] = stock_data[c].ffill()
     else:
         stock_data["pe"] = None
         stock_data["pb"] = None
+
+    if "pe" not in stock_data.columns:
+        stock_data["pe"] = None
 
     plot_df = (
         stock_data[["Open", "High", "Low", "Close", "Volume"]]
@@ -243,8 +248,13 @@ def analyze_stock_candlestick(ticker: str):
     buf.seek(0)
     chart_data = base64.b64encode(buf.getvalue()).decode("utf-8")
 
+    tbl_cols = ["Close", "MACD", "RSI"]
+    if "pe" in stock_data.columns:
+        tbl_cols.append("pe")
+    if "pb" in stock_data.columns:
+        tbl_cols.append("pb")
     table_html = (
-        stock_data.tail(5)[["Close", "MACD", "RSI", "pe", "pb"]]
+        stock_data.tail(5)[tbl_cols]
         .round(2)
         .fillna(0)
         .reset_index()
@@ -306,6 +316,9 @@ def predict_future_moves(ticker: str, horizons=None):
     df = df.reset_index()
     fund = fund.reset_index()
     df = df.merge(fund, how="left", on="date")
+    for col in ["eps", "pe", "pb"]:
+        if col not in df.columns:
+            df[col] = 0
     df.set_index("date", inplace=True)
     if fund.empty:
         df[["eps", "pe", "pb"]] = 0
