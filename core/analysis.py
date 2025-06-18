@@ -125,6 +125,54 @@ def _load_financial_metrics(ticker_symbol: str) -> pd.DataFrame:
         return pd.DataFrame()
 
 
+def _load_quarterly_financials(ticker_symbol: str) -> pd.DataFrame:
+    """Return last 4 quarters of financials with operating margin."""
+    try:
+        df = yf.Ticker(ticker_symbol).quarterly_financials
+        if not isinstance(df, pd.DataFrame) or df.empty:
+            return pd.DataFrame()
+        df = df.T
+        cols = [
+            "Total Revenue",
+            "Cost Of Revenue",
+            "Operating Income",
+            "Net Income",
+        ]
+        df = df[cols]
+        df["Operating Margin"] = df["Operating Income"] / df["Total Revenue"]
+        df.index = pd.to_datetime(df.index)
+        df.sort_index(ascending=False, inplace=True)
+        df = df.head(4)
+        df.sort_index(ascending=True, inplace=True)
+        return df
+    except Exception:
+        return pd.DataFrame()
+
+
+def _load_annual_financials(ticker_symbol: str) -> pd.DataFrame:
+    """Return last 3 years of financials with operating margin."""
+    try:
+        df = yf.Ticker(ticker_symbol).financials
+        if not isinstance(df, pd.DataFrame) or df.empty:
+            return pd.DataFrame()
+        df = df.T
+        cols = [
+            "Total Revenue",
+            "Cost Of Revenue",
+            "Operating Income",
+            "Net Income",
+        ]
+        df = df[cols]
+        df["Operating Margin"] = df["Operating Income"] / df["Total Revenue"]
+        df.index = pd.to_datetime(df.index)
+        df.sort_index(ascending=False, inplace=True)
+        df = df.head(3)
+        df.sort_index(ascending=True, inplace=True)
+        return df
+    except Exception:
+        return pd.DataFrame()
+
+
 def get_company_name(ticker: str) -> str:
     """Return truncated company name if available."""
     ticker_symbol = f"{ticker}.T" if not ticker.endswith(".T") else ticker
