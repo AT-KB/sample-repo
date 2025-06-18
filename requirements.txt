@@ -12,3 +12,4 @@ ta
 pytest
 jinja2
 lightgbm
+flake8
