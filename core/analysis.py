@@ -24,6 +24,8 @@ def _load_fundamentals(ticker_symbol: str) -> pd.DataFrame:
     try:
         tkr = yf.Ticker(ticker_symbol)
         eps_q = tkr.quarterly_earnings["Earnings"]
+        if isinstance(eps_q.index, pd.MultiIndex):
+            eps_q.index = pd.to_datetime(eps_q.index.get_level_values(0))
         if eps_q.empty:
             return pd.DataFrame()
 

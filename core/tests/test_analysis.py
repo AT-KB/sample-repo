@@ -16,6 +16,7 @@ from core.analysis import (
     analyze_stock_candlestick,
     predict_future_moves,
     predict_next_move,
+    _load_fundamentals,
 )
 
 
@@ -125,4 +126,22 @@ class AnalysisTests(SimpleTestCase):
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
         self.assertIn("Total Revenue", content)
+
+    @patch("yfinance.download")
+    @patch("yfinance.Ticker")
+    def test_load_fundamentals_handles_multiindex(self, mock_ticker, mock_download):
+        dates = pd.to_datetime(["2020-03-31", "2020-06-30"])
+        mi = pd.MultiIndex.from_arrays([dates, ["A", "B"]])
+        mock_ticker.return_value.quarterly_earnings = pd.DataFrame({"Earnings": [1, 2]}, index=mi)
+        mock_ticker.return_value.info = {"sharesOutstanding": 1000, "priceToBook": 1.0}
+        mock_ticker.return_value.quarterly_balance_sheet = pd.DataFrame(
+            {pd.to_datetime("2020-03-31"): [1000], pd.to_datetime("2020-06-30"): [1000]},
+            index=["Total Stockholder Equity"],
+        )
+        price_idx = pd.date_range("2020-03-30", periods=3)
+        mock_download.return_value = pd.DataFrame({"Close": [10, 11, 12]}, index=price_idx)
+
+        df = _load_fundamentals("7203.T")
+        self.assertTrue(isinstance(df.index, pd.DatetimeIndex))
+        self.assertEqual(df.index.nlevels, 1)
 
