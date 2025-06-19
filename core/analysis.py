@@ -194,36 +194,57 @@ def get_company_name(ticker: str) -> str:
 
 def _load_and_format_financials(ticker_symbol: str, period: str) -> str:
     """Load financial data, format it as HTML, and handle errors."""
+    title = "Quarterly Financials" if period == "quarterly" else "Annual Financials"
     try:
         tkr = yf.Ticker(ticker_symbol)
-        if period == "quarterly":
-            df = tkr.quarterly_financials
-            title = "Quarterly Financials"
-        else:
-            df = tkr.financials
-            title = "Annual Financials"
+        df = (
+            tkr.quarterly_financials if period == "quarterly" else tkr.financials
+        )
 
         if not isinstance(df, pd.DataFrame) or df.empty:
             return f"<h3>{title}</h3><p>Data not available.</p>"
 
         df = df.T
 
-        cols_to_show = [
-            col
-            for col in ["Total Revenue", "Operating Income", "Net Income"]
-            if col in df.columns
+        revenue_candidates = ["Total Revenue", "Operating Revenue"]
+        op_income_candidates = [
+            "Operating Income",
+            "Total Operating Income As Reported",
         ]
-        if not cols_to_show:
+        net_income_candidates = [
+            "Net Income",
+            "Net Income Common Stockholders",
+        ]
+
+        detected_cols = []
+        for candidates in [
+            revenue_candidates,
+            op_income_candidates,
+            net_income_candidates,
+        ]:
+            for col in candidates:
+                if col in df.columns:
+                    detected_cols.append(col)
+                    break
+
+        if not detected_cols:
             return f"<h3>{title}</h3><p>Key financial data not found.</p>"
 
-        df_display = df[cols_to_show].head(4)
+        df_display = df[detected_cols].head(4)
+
+        def fmt_value(val: float) -> str:
+            if pd.isna(val):
+                return "-"
+            if abs(val) >= 1e9:
+                return f"{val/1e9:,.0f}B"
+            return f"{val/1e6:,.0f}M"
 
         for col in df_display.columns:
-            df_display[col] = df_display[col].apply(
-                lambda x: f"{x/1e6:,.0f}M" if pd.notnull(x) else "-"
-            )
+            df_display[col] = df_display[col].apply(fmt_value)
 
-        return f"<h3>{title}</h3>" + df_display.to_html(classes="table table-striped")
+        return f"<h3>{title}</h3>" + df_display.to_html(
+            classes="table table-striped"
+        )
 
     except Exception as e:
         return f"<h3>{title}</h3><p>Error loading data: {e}</p>"

@@ -119,7 +119,10 @@ class AnalysisTests(SimpleTestCase):
     ):
         mock_analyze.return_value = ("chart", "<table></table>", None)
         mock_predict.return_value = ("<table></table>", None)
-        mock_fin.return_value = "<h3>Quarterly Financials</h3><table><tr><th>Total Revenue</th><td>1</td></tr></table>"
+        mock_fin.return_value = (
+            "<h3>Quarterly Financials</h3>"
+            "<table><tr><th>Total Revenue</th><td>1</td></tr></table>"
+        )
         response = self.client.get(
             "/?ticker1=7203", HTTP_HOST="localhost"
         )
@@ -243,3 +246,52 @@ class AnalysisTests(SimpleTestCase):
         html, result_none = predict_future_moves("7203")
         self.assertIn("<table", html)
         self.assertIsNone(result_none)
+
+    @patch("yfinance.Ticker")
+    def test_load_and_format_financials_detects_variant_columns_quarterly(
+        self, mock_ticker
+    ):
+        df = pd.DataFrame(
+            {
+                pd.to_datetime("2024-03-31"): [1e10, 3e9, 1e9],
+                pd.to_datetime("2023-12-31"): [2e10, 4e9, 2e9],
+            },
+            index=[
+                "Operating Revenue",
+                "Total Operating Income As Reported",
+                "Net Income Common Stockholders",
+            ],
+        )
+        mock_ticker.return_value.quarterly_financials = df
+        mock_ticker.return_value.financials = df
+
+        from core.analysis import _load_and_format_financials
+
+        html = _load_and_format_financials("7203", "quarterly")
+        self.assertIn("<table", html)
+        self.assertIn("Operating Revenue", html)
+        self.assertIn("Total Operating Income As Reported", html)
+        self.assertNotIn("Key financial data not found", html)
+
+    @patch("yfinance.Ticker")
+    def test_load_and_format_financials_detects_variant_columns_annual(
+        self, mock_ticker
+    ):
+        df = pd.DataFrame(
+            {
+                pd.to_datetime("2023-12-31"): [5e9, 2e9, 1e9],
+            },
+            index=[
+                "Operating Revenue",
+                "Total Operating Income As Reported",
+                "Net Income Common Stockholders",
+            ],
+        )
+        mock_ticker.return_value.financials = df
+        mock_ticker.return_value.quarterly_financials = df
+
+        from core.analysis import _load_and_format_financials
+
+        html = _load_and_format_financials("7203", "annual")
+        self.assertIn("<table", html)
+        self.assertNotIn("Key financial data not found", html)
