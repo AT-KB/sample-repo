@@ -192,6 +192,43 @@ def get_company_name(ticker: str) -> str:
     return str(name)[:9]
 
 
+def _load_and_format_financials(ticker_symbol: str, period: str) -> str:
+    """Load financial data, format it as HTML, and handle errors."""
+    try:
+        tkr = yf.Ticker(ticker_symbol)
+        if period == "quarterly":
+            df = tkr.quarterly_financials
+            title = "Quarterly Financials"
+        else:
+            df = tkr.financials
+            title = "Annual Financials"
+
+        if not isinstance(df, pd.DataFrame) or df.empty:
+            return f"<h3>{title}</h3><p>Data not available.</p>"
+
+        df = df.T
+
+        cols_to_show = [
+            col
+            for col in ["Total Revenue", "Operating Income", "Net Income"]
+            if col in df.columns
+        ]
+        if not cols_to_show:
+            return f"<h3>{title}</h3><p>Key financial data not found.</p>"
+
+        df_display = df[cols_to_show].head(4)
+
+        for col in df_display.columns:
+            df_display[col] = df_display[col].apply(
+                lambda x: f"{x/1e6:,.0f}M" if pd.notnull(x) else "-"
+            )
+
+        return f"<h3>{title}</h3>" + df_display.to_html(classes="table table-striped")
+
+    except Exception as e:
+        return f"<h3>{title}</h3><p>Error loading data: {e}</p>"
+
+
 def analyze_stock(ticker: str):
     """Fetch data and return base64 chart image and HTML table."""
     ticker_symbol = f"{ticker}.T" if not ticker.endswith('.T') else ticker
