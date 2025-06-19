@@ -25,6 +25,15 @@ TICKER_NAMES = {
 }
 
 
+def _get_first_non_empty(tkr: yf.Ticker, attrs: list[str]) -> pd.DataFrame:
+    """Return the first non-empty DataFrame among ticker attributes."""
+    for attr in attrs:
+        df = getattr(tkr, attr, None)
+        if isinstance(df, pd.DataFrame) and not df.empty:
+            return df
+    return pd.DataFrame()
+
+
 def _load_fundamentals(ticker_symbol: str) -> pd.DataFrame:
     """Return EPS, PE, PB data indexed by announcement date."""
     try:
@@ -109,76 +118,6 @@ def _load_fundamentals(ticker_symbol: str) -> pd.DataFrame:
         return pd.DataFrame()
 
 
-def _load_financial_metrics(ticker_symbol: str) -> pd.DataFrame:
-    """Return selected yearly financial metrics."""
-    try:
-        df = yf.Ticker(ticker_symbol).financials.T
-        cols = [
-            "Total Revenue",
-            "Cost Of Revenue",
-            "Selling General Administrative",
-            "Operating Income",
-            "Net Income",
-        ]
-        return df[cols]
-    except Exception:
-        return pd.DataFrame()
-
-
-def _load_quarterly_financials(ticker_symbol: str) -> pd.DataFrame:
-    """Return last 4 quarters of financials with operating margin."""
-    try:
-        df = yf.Ticker(ticker_symbol).quarterly_financials
-        print(f"Quarterly DF shape: {getattr(df, 'shape', 'N/A')}")
-        if not isinstance(df, pd.DataFrame) or df.empty:
-            print("Quarterly financials not available")
-            return pd.DataFrame()
-        df = df.T
-        cols = [
-            "Total Revenue",
-            "Cost Of Revenue",
-            "Operating Income",
-            "Net Income",
-        ]
-        df = df[cols]
-        df["Operating Margin"] = df["Operating Income"] / df["Total Revenue"]
-        df.index = pd.to_datetime(df.index)
-        df.sort_index(ascending=False, inplace=True)
-        df = df.head(4)
-        df.sort_index(ascending=True, inplace=True)
-        return df
-    except Exception:
-        print("Quarterly financials not available")
-        return pd.DataFrame()
-
-
-def _load_annual_financials(ticker_symbol: str) -> pd.DataFrame:
-    """Return last 3 years of financials with operating margin."""
-    try:
-        df = yf.Ticker(ticker_symbol).financials
-        print(f"Annual DF shape: {getattr(df, 'shape', 'N/A')}")
-        if not isinstance(df, pd.DataFrame) or df.empty:
-            print("Annual financials not available")
-            return pd.DataFrame()
-        df = df.T
-        cols = [
-            "Total Revenue",
-            "Cost Of Revenue",
-            "Operating Income",
-            "Net Income",
-        ]
-        df = df[cols]
-        df["Operating Margin"] = df["Operating Income"] / df["Total Revenue"]
-        df.index = pd.to_datetime(df.index)
-        df.sort_index(ascending=False, inplace=True)
-        df = df.head(3)
-        df.sort_index(ascending=True, inplace=True)
-        return df
-    except Exception:
-        print("Annual financials not available")
-        return pd.DataFrame()
-
-
 def get_company_name(ticker: str) -> str:
     """Return truncated company name if available."""
     ticker_symbol = f"{ticker}.T" if not ticker.endswith(".T") else ticker
@@ -193,13 +132,16 @@ def get_company_name(ticker: str) -> str:
 
 
 def _load_and_format_financials(ticker_symbol: str, period: str) -> str:
-    """Load financial data, format it as HTML, and handle errors."""
+    """Return HTML table for quarterly or annual financials."""
     title = "Quarterly Financials" if period == "quarterly" else "Annual Financials"
     try:
         tkr = yf.Ticker(ticker_symbol)
-        df = (
-            tkr.quarterly_financials if period == "quarterly" else tkr.financials
-        )
+        if period == "quarterly":
+            df = _get_first_non_empty(tkr, ["quarterly_financials", "financials"])
+            limit = 4
+        else:
+            df = _get_first_non_empty(tkr, ["financials", "quarterly_financials"])
+            limit = 3
 
         if not isinstance(df, pd.DataFrame) or df.empty:
             return f"<h3>{title}</h3><p>Data not available.</p>"
@@ -230,7 +172,7 @@ def _load_and_format_financials(ticker_symbol: str, period: str) -> str:
         if not detected_cols:
             return f"<h3>{title}</h3><p>Key financial data not found.</p>"
 
-        df_display = df[detected_cols].head(4)
+        df_display = df[detected_cols].head(limit)
 
         def fmt_value(val: float) -> str:
             if pd.isna(val):
@@ -242,9 +184,7 @@ def _load_and_format_financials(ticker_symbol: str, period: str) -> str:
         for col in df_display.columns:
             df_display[col] = df_display[col].apply(fmt_value)
 
-        return f"<h3>{title}</h3>" + df_display.to_html(
-            classes="table table-striped"
-        )
+        return f"<h3>{title}</h3>" + df_display.to_html(classes="table table-striped")
 
     except Exception as e:
         return f"<h3>{title}</h3><p>Error loading data: {e}</p>"
