@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Candlestick Analysis</h1>
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-3">
+      <input type="text" class="form-control" name="ticker1" value="{{ ticker1 }}" placeholder="Ticker code 1">
+    </div>
+    <div class="col-md-3">
+      <input type="text" class="form-control" name="ticker2" value="{{ ticker2 }}" placeholder="Ticker code 2">
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-primary w-100">Analyze</button>
+    </div>
+  </form>
+  <div class="row">
+    <div class="col-md-6">
+    {% if data1.warning %}
+      <div class="alert alert-warning">{{ data1.warning }}</div>
+    {% endif %}
+      {% if data1.chart_data %}
+        <h2>{{ data1.company_name|default:ticker1 }}</h2>
+        <img src="data:image/png;base64,{{ data1.chart_data }}" alt="Chart" class="img-fluid w-100">
+      {% endif %}
+    {% if data1.latest_data_table %}
+      <h3>Latest Data</h3>
+      {{ data1.latest_data_table|safe }}
+    {% endif %}
+    {% if data1.quarterly_table %}
+      {{ data1.quarterly_table|safe }}
+    {% endif %}
+    {% if data1.annual_table %}
+      {{ data1.annual_table|safe }}
+    {% endif %}
+      {% if data1.prediction_table %}
+        <h3>Predictions</h3>
+        {{ data1.prediction_table|safe }}
+      {% endif %}
+  </div>
+  <div class="col-md-6">
+    {% if data2.warning %}
+      <div class="alert alert-warning">{{ data2.warning }}</div>
+    {% endif %}
+      {% if data2.chart_data %}
+        <h2>{{ data2.company_name|default:ticker2 }}</h2>
+        <img src="data:image/png;base64,{{ data2.chart_data }}" alt="Chart" class="img-fluid w-100">
+      {% endif %}
+    {% if data2.latest_data_table %}
+      <h3>Latest Data</h3>
+      {{ data2.latest_data_table|safe }}
+    {% endif %}
+    {% if data2.quarterly_table %}
+      {{ data2.quarterly_table|safe }}
+    {% endif %}
+    {% if data2.annual_table %}
+      {{ data2.annual_table|safe }}
+    {% endif %}
+      {% if data2.prediction_table %}
+        <h3>Predictions</h3>
+        {{ data2.prediction_table|safe }}
+      {% endif %}
+  </div>
+</div>
+{% endblock %}
