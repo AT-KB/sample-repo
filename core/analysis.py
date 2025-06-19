@@ -129,7 +129,9 @@ def _load_quarterly_financials(ticker_symbol: str) -> pd.DataFrame:
     """Return last 4 quarters of financials with operating margin."""
     try:
         df = yf.Ticker(ticker_symbol).quarterly_financials
+        print(f"Quarterly DF shape: {getattr(df, 'shape', 'N/A')}")
         if not isinstance(df, pd.DataFrame) or df.empty:
+            print("Quarterly financials not available")
             return pd.DataFrame()
         df = df.T
         cols = [
@@ -146,6 +148,7 @@ def _load_quarterly_financials(ticker_symbol: str) -> pd.DataFrame:
         df.sort_index(ascending=True, inplace=True)
         return df
     except Exception:
+        print("Quarterly financials not available")
         return pd.DataFrame()
 
 
@@ -153,7 +156,9 @@ def _load_annual_financials(ticker_symbol: str) -> pd.DataFrame:
     """Return last 3 years of financials with operating margin."""
     try:
         df = yf.Ticker(ticker_symbol).financials
+        print(f"Annual DF shape: {getattr(df, 'shape', 'N/A')}")
         if not isinstance(df, pd.DataFrame) or df.empty:
+            print("Annual financials not available")
             return pd.DataFrame()
         df = df.T
         cols = [
@@ -170,6 +175,7 @@ def _load_annual_financials(ticker_symbol: str) -> pd.DataFrame:
         df.sort_index(ascending=True, inplace=True)
         return df
     except Exception:
+        print("Annual financials not available")
         return pd.DataFrame()
 
 
