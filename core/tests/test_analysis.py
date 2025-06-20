@@ -262,8 +262,9 @@ class AnalysisTests(SimpleTestCase):
                 "Net Income Common Stockholders",
             ],
         )
-        mock_ticker.return_value.quarterly_financials = df
-        mock_ticker.return_value.financials = df
+        mock_ticker.return_value.quarterly_income_stmt = df
+        mock_ticker.return_value.quarterly_financials = pd.DataFrame()
+        mock_ticker.return_value.quarterly_balance_sheet = pd.DataFrame()
 
         from core.analysis import _load_and_format_financials
 
@@ -287,11 +288,31 @@ class AnalysisTests(SimpleTestCase):
                 "Net Income Common Stockholders",
             ],
         )
-        mock_ticker.return_value.financials = df
-        mock_ticker.return_value.quarterly_financials = df
+        mock_ticker.return_value.income_stmt = df
+        mock_ticker.return_value.financials = pd.DataFrame()
+        mock_ticker.return_value.balance_sheet = pd.DataFrame()
 
         from core.analysis import _load_and_format_financials
 
         html = _load_and_format_financials("7203", "annual")
         self.assertIn("<table", html)
+        self.assertNotIn("Key financial data not found", html)
+
+    @patch("yfinance.Ticker")
+    def test_load_and_format_financials_handles_generic_names(self, mock_ticker):
+        df = pd.DataFrame(
+            {
+                pd.to_datetime("2024-03-31"): [1e9, 2e8, 3e8],
+            },
+            index=["Revenue", "OpIncome", "NetIncome"],
+        )
+        mock_ticker.return_value.quarterly_income_stmt = df
+        mock_ticker.return_value.quarterly_financials = pd.DataFrame()
+        mock_ticker.return_value.quarterly_balance_sheet = pd.DataFrame()
+
+        from core.analysis import _load_and_format_financials
+
+        html = _load_and_format_financials("7203", "quarterly")
+        self.assertIn("<table", html)
+        self.assertIn("Revenue", html)
         self.assertNotIn("Key financial data not found", html)
