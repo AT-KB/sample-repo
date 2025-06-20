@@ -34,6 +34,18 @@ def _get_first_non_empty(tkr: yf.Ticker, attrs: list[str]) -> pd.DataFrame:
     return pd.DataFrame()
 
 
+def _fetch_fin_stmt(tkr: yf.Ticker, attrs: list[str]) -> pd.DataFrame:
+    """Return the first non-empty financial statement DataFrame."""
+    for attr in attrs:
+        df = getattr(tkr, attr, None)
+        if isinstance(df, pd.DataFrame) and not df.empty:
+            df = df.copy()
+            if isinstance(df.index, pd.MultiIndex):
+                df.index = df.index.get_level_values(0)
+            return df
+    return pd.DataFrame()
+
+
 def _load_fundamentals(ticker_symbol: str) -> pd.DataFrame:
     """Return EPS, PE, PB data indexed by announcement date."""
     try:
@@ -137,25 +149,33 @@ def _load_and_format_financials(ticker_symbol: str, period: str) -> str:
     try:
         tkr = yf.Ticker(ticker_symbol)
         if period == "quarterly":
-            df = _get_first_non_empty(tkr, ["quarterly_financials", "financials"])
+            attrs = [
+                "quarterly_income_stmt",
+                "quarterly_financials",
+                "quarterly_balance_sheet",
+            ]
             limit = 4
         else:
-            df = _get_first_non_empty(tkr, ["financials", "quarterly_financials"])
+            attrs = ["income_stmt", "financials", "balance_sheet"]
             limit = 3
 
+        df = _fetch_fin_stmt(tkr, attrs)
         if not isinstance(df, pd.DataFrame) or df.empty:
             return f"<h3>{title}</h3><p>Data not available.</p>"
 
         df = df.T
 
-        revenue_candidates = ["Total Revenue", "Operating Revenue"]
+        revenue_candidates = ["Total Revenue", "Operating Revenue", "Revenue"]
         op_income_candidates = [
             "Operating Income",
             "Total Operating Income As Reported",
+            "Operating Profit",
+            "OpIncome",
         ]
         net_income_candidates = [
             "Net Income",
             "Net Income Common Stockholders",
+            "NetIncome",
         ]
 
         detected_cols = []
