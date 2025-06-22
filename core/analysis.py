@@ -407,10 +407,41 @@ def predict_future_moves(ticker: str, horizons=None):
     df["Return"] = df["Close"].pct_change()
     for i in range(1, 6):
         df[f"lag_{i}"] = df["Return"].shift(i)
+
+    rsi_indicator = ta.momentum.RSIIndicator(close=df["Close"])
+    df["rsi"] = rsi_indicator.rsi()
+
+    macd_indicator = ta.trend.MACD(close=df["Close"])
+    df["macd"] = macd_indicator.macd()
+    df["macd_signal"] = macd_indicator.macd_signal()
+    df["macd_diff"] = macd_indicator.macd_diff()
+
+    stoch_indicator = ta.momentum.StochasticOscillator(
+        high=df["High"], low=df["Low"], close=df["Close"]
+    )
+    df["stoch"] = stoch_indicator.stoch()
+    df["stoch_signal"] = stoch_indicator.stoch_signal()
+
+    atr_indicator = ta.volatility.AverageTrueRange(
+        high=df["High"], low=df["Low"], close=df["Close"]
+    )
+    df["atr"] = atr_indicator.average_true_range()
+
     df.dropna(subset=["eps", "pe", "pb"], inplace=True)
     df.dropna(inplace=True)
 
-    feature_cols = [f"lag_{i}" for i in range(1, 6)] + ["eps", "pe", "pb"]
+    feature_cols = [f"lag_{i}" for i in range(1, 6)] + [
+        "eps",
+        "pe",
+        "pb",
+        "rsi",
+        "macd",
+        "macd_signal",
+        "macd_diff",
+        "stoch",
+        "stoch_signal",
+        "atr",
+    ]
     X = df[feature_cols].copy()
     X.columns = [str(c) for c in X.columns]
     results = []
@@ -432,6 +463,8 @@ def predict_future_moves(ticker: str, horizons=None):
         tmp = pd.concat([X, df[f"target_{h}"]], axis=1).dropna()
         X_h = tmp[feature_cols]
         y_h = tmp[f"target_{h}"]
+        if len(X_h) <= tscv.n_splits:
+            continue
         model = None
         train_index = None
         for train_index, _ in tscv.split(X_h):
