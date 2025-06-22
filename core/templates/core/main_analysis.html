@@ -34,7 +34,7 @@
       {% if data1.prediction_table %}
         <h3>Predictions</h3>
         {{ data1.prediction_table|safe }}
-        {{ data1.gemini_report|linebreaks }}
+        {{ data1.gemini_report_html|safe }}
       {% endif %}
   </div>
   <div class="col-md-6">
@@ -58,7 +58,7 @@
       {% if data2.prediction_table %}
         <h3>Predictions</h3>
         {{ data2.prediction_table|safe }}
-        {{ data2.gemini_report|linebreaks }}
+        {{ data2.gemini_report_html|safe }}
       {% endif %}
   </div>
 </div>
