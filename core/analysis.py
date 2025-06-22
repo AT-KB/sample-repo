@@ -370,7 +370,7 @@ def predict_next_move(ticker: str):
 
 def predict_future_moves(ticker: str, horizons=None):
     """Predict stock direction for multiple days ahead with expected return."""
-    ticker_symbol = f"{ticker}.T" if not ticker.endswith('.T') else ticker
+    ticker_symbol = f"{ticker}.T" if not ticker.endswith(".T") else ticker
     df = yf.download(ticker_symbol, period="2y", interval="1d", auto_adjust=False)
     if isinstance(df.columns, pd.MultiIndex):
         df.columns = df.columns.get_level_values(0)
@@ -401,35 +401,35 @@ def predict_future_moves(ticker: str, horizons=None):
     else:
         df[["eps", "pe", "pb"]] = df[["eps", "pe", "pb"]].ffill()
 
-    if horizons is None:
-        horizons = [1, 7, 28]
-
+    # テクニカル指標の計算
     df["Return"] = df["Close"].pct_change()
     for i in range(1, 6):
         df[f"lag_{i}"] = df["Return"].shift(i)
 
-    rsi_indicator = ta.momentum.RSIIndicator(close=df["Close"])
-    df["rsi"] = rsi_indicator.rsi()
-
+    df["rsi"] = ta.momentum.RSIIndicator(close=df["Close"]).rsi()
     macd_indicator = ta.trend.MACD(close=df["Close"])
     df["macd"] = macd_indicator.macd()
     df["macd_signal"] = macd_indicator.macd_signal()
     df["macd_diff"] = macd_indicator.macd_diff()
-
     stoch_indicator = ta.momentum.StochasticOscillator(
         high=df["High"], low=df["Low"], close=df["Close"]
     )
     df["stoch"] = stoch_indicator.stoch()
     df["stoch_signal"] = stoch_indicator.stoch_signal()
-
-    atr_indicator = ta.volatility.AverageTrueRange(
+    df["atr"] = ta.volatility.AverageTrueRange(
         high=df["High"], low=df["Low"], close=df["Close"]
-    )
-    df["atr"] = atr_indicator.average_true_range()
+    ).average_true_range()
 
-    df.dropna(subset=["eps", "pe", "pb"], inplace=True)
-    df.dropna(inplace=True)
+    # \u2605\u2605\u2605\u2605\u2605 ここからが最重要の修正点 \u2605\u2605\u2605\u2605\u2605
 
+    # 1. 目的変数と将来リターンを先に計算し、欠損値をまとめて処理
+    if horizons is None:
+        horizons = [1, 7, 28]
+    for h in horizons:
+        df[f"target_{h}"] = (df["Close"].shift(-h) > df["Close"]).astype(int)
+        df[f"future_return_{h}"] = df["Close"].pct_change(periods=h).shift(-h)
+
+    # 2. 特徴量と目的変数が揃っている行だけを最終的な学習データとする
     feature_cols = [f"lag_{i}" for i in range(1, 6)] + [
         "eps",
         "pe",
@@ -442,36 +442,27 @@ def predict_future_moves(ticker: str, horizons=None):
         "stoch_signal",
         "atr",
     ]
-    X = df[feature_cols].copy()
+    target_cols = [f"target_{h}" for h in horizons]
+    return_cols = [f"future_return_{h}" for h in horizons]
+
+    df_clean = df[feature_cols + target_cols + return_cols].dropna()
+
+    X = df_clean[feature_cols]
     X.columns = [str(c) for c in X.columns]
+
     results = []
     tscv = TimeSeriesSplit(n_splits=5)
 
-    def custom_objective(y_true, y_pred):
-        residual = y_true - y_pred
-        grad = -2 * residual
-        hess = np.full_like(y_true, 2)
-        return grad, hess
-
-    def custom_eval(y_true, y_pred):
-        rmse = np.sqrt(np.mean((y_true - y_pred) ** 2))
-        return "custom_rmse", rmse, False
-
     for h in horizons:
-        df[f"target_{h}"] = (
-            df["Close"].shift(-h) > df["Close"]
-        ).astype(int)
-        df[f"future_return_{h}"] = np.log(
-            df["Close"].shift(-h) / df["Close"]
-        )
-        tmp = pd.concat([X, df[f"target_{h}"]], axis=1).dropna()
-        X_h = tmp[feature_cols]
-        y_h = tmp[f"target_{h}"]
-        if len(X_h) <= tscv.n_splits:
+        y_h = df_clean[f"target_{h}"]
+        returns_h = df_clean[f"future_return_{h}"]
+
+        if len(X) <= tscv.n_splits:
             continue
+
         model = None
-        train_index = None
-        for train_index, _ in tscv.split(X_h):
+        final_train_index = None
+        for train_index, _ in tscv.split(X):
             model = LGBMClassifier(
                 random_state=0,
                 learning_rate=0.05,
@@ -482,22 +473,41 @@ def predict_future_moves(ticker: str, horizons=None):
                 reg_lambda=0.1,
                 n_jobs=-1,
             )
-            model.fit(X_h.iloc[train_index], y_h.iloc[train_index])
-        if model is None:
+            model.fit(X.iloc[train_index], y_h.iloc[train_index])
+            final_train_index = train_index
+
+        if model is None or final_train_index is None:
             continue
-        proba_up = float(model.predict_proba(X.iloc[[-1]])[0, 1])
-        prob_up = 100 * proba_up
-        prediction = "UP" if proba_up >= 0.5 else "DOWN"
-        expected_return = 0.0
+
+        prob_up = model.predict_proba(X.iloc[[-1]])[0, 1]
+        prediction = "UP" if prob_up >= 0.5 else "DOWN"
+
+        # 期待リターンの計算ロジックを再構築
+        train_pred = model.predict(X.iloc[final_train_index])
+        y_train = y_h.iloc[final_train_index]
+        returns_train = returns_h.iloc[final_train_index]
+
+        up_mask = (train_pred == 1) & (y_train == 1)
+        down_mask = (train_pred == 0) & (y_train == 0)
+
+        up_return = returns_train[up_mask].mean()
+        down_return = returns_train[down_mask].mean()
+
+        expected_return = up_return if prediction == "UP" else down_return
+        if pd.isna(expected_return):
+            expected_return = 0.0
 
         results.append(
             {
                 "予測日数": h,
                 "Prediction": prediction,
-                "上昇確率": round(prob_up),
-                "期待リターン": round(expected_return * 100, 2),
+                "上昇確率": round(prob_up * 100),
+                "期待リターン": expected_return,
             }
         )
+
+    if not results:
+        return (None, None)
 
     table = pd.DataFrame(results)
     prob_col = "上昇確率"
