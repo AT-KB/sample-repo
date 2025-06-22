@@ -7,8 +7,8 @@ from .analysis import (
     analyze_stock_candlestick,
     predict_future_moves,
     _load_and_format_financials,
-    INDUSTRY_TICKER_MAP,
 )
+from .industry_ticker_map import INDUSTRY_TICKER_MAP
 from .gemini_analyzer import generate_analyst_report
 
 # Legacy attributes kept for test compatibility

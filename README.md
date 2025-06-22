@@ -95,3 +95,11 @@ The application shows extra panels below the stock price chart:
 
 These indicators rely on the `ta` package, which is already listed in
 `requirements.txt`.
+
+## 銘柄リストの更新
+最新の銘柄リストを取得するには、以下のコマンドを実行してください。
+これにより、`core/industry_ticker_map.py` が自動生成されます。
+
+```bash
+python scripts/generate_ticker_map.py
+```
