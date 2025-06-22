@@ -24,6 +24,18 @@ TICKER_NAMES = {
     "9104.T": "商船三井",
 }
 
+INDUSTRY_TICKER_MAP = {
+    "自動車": {"7203": "トヨタ自動車", "7203.T": "トヨタ自動車"},
+    "電機": {"6758": "ソニーグループ", "6758.T": "ソニーグループ"},
+    "金融": {"8591": "オリックス", "8591.T": "オリックス"},
+    "海運": {
+        "9101": "日本郵船",
+        "9101.T": "日本郵船",
+        "9104": "商船三井",
+        "9104.T": "商船三井",
+    },
+}
+
 
 def _get_first_non_empty(tkr: yf.Ticker, attrs: list[str]) -> pd.DataFrame:
     """Return the first non-empty DataFrame among ticker attributes."""
@@ -332,7 +344,7 @@ def analyze_stock_candlestick(ticker: str):
 
     tbl_cols = ["Close", "MACD", "RSI", "eps", "pe"]
     table_df = stock_data.tail(5)[tbl_cols].round(0)
-    table_df = table_df.applymap(lambda x: "-" if pd.isna(x) else int(x))
+    table_df = table_df.map(lambda x: "-" if pd.isna(x) else int(x))
     table_html = table_df.reset_index().rename(columns={"index": "date"}).to_html(
         classes="table table-striped", index=False
     )
