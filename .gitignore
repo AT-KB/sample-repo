@@ -20,3 +20,4 @@ ENV/
 .DS_Store
 *.swp
 *.ipynb
+core/industry_ticker_map.py

@@ -24,18 +24,6 @@ TICKER_NAMES = {
     "9104.T": "商船三井",
 }
 
-INDUSTRY_TICKER_MAP = {
-    "自動車": {"7203": "トヨタ自動車", "7203.T": "トヨタ自動車"},
-    "電機": {"6758": "ソニーグループ", "6758.T": "ソニーグループ"},
-    "金融": {"8591": "オリックス", "8591.T": "オリックス"},
-    "海運": {
-        "9101": "日本郵船",
-        "9101.T": "日本郵船",
-        "9104": "商船三井",
-        "9104.T": "商船三井",
-    },
-}
-
 
 def _get_first_non_empty(tkr: yf.Ticker, attrs: list[str]) -> pd.DataFrame:
     """Return the first non-empty DataFrame among ticker attributes."""
