@@ -25,12 +25,21 @@ def generate_analyst_report(
         )
 
     # HTMLテーブルをシンプルなテキストに変換（簡易版）
-    try:
-        latest_data = pd.read_html(latest_data_html)[0].to_string()
-        predictions = pd.read_html(predictions_html)[0].to_string()
-    except Exception:
-        latest_data = "N/A"
-        predictions = "N/A"
+    if latest_data_html in (None, ""):
+        latest_data = "（最新データ提供なし）"
+    else:
+        try:
+            latest_data = pd.read_html(latest_data_html)[0].to_string()
+        except Exception:
+            latest_data = "（最新データ解析に失敗）"
+
+    if predictions_html in (None, ""):
+        predictions = "（予測データ提供なし）"
+    else:
+        try:
+            predictions = pd.read_html(predictions_html)[0].to_string()
+        except Exception:
+            predictions = "（予測データ解析に失敗）"
 
     prompt = f"""
 あなたは、ウォール街で20年の経験を持つ、トップクラスの証券アナリストです。あなたのレポートは、客観的なデータと鋭い洞察力で、機関投資家からも絶大な信頼を得ています。
@@ -97,12 +106,16 @@ def generate_analyst_report(
 ---
 
 ## 3. テクニカル分析
-**【入力データ】**
+**​:codex-terminal-citation[codex-terminal-citation]{{
+line_range_start=1 line_range_end=20 terminal_chunk_id=入力データ
+}}**
 {latest_data}
 {predictions}
 
 **【分析コメント】**
-（上記入力データに基づき、短期的なモメンタムと、自社モデルの予測傾向を解説。予測に矛盾があればそれも指摘）
+**指示:** 上記の【入力データ】を厳密に解釈し、たとえ一部しかなくても
+その情報だけで可能な限りの洞察を述べること。完全に不足している
+ときのみ「分析不能」と記載する。
 
 ---
 
