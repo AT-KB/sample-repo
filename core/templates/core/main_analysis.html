@@ -1,17 +1,35 @@
 {% extends 'base.html' %}
+{% load json_extras %}
 {% block content %}
 <h1>Candlestick Analysis</h1>
   <form method="get" class="row g-2 mb-3">
     <div class="col-md-3">
-      <input type="text" class="form-control" name="ticker1" value="{{ ticker1 }}" placeholder="Ticker code 1">
+      <input type="text" class="form-control" id="ticker1" name="ticker1" value="{{ ticker1 }}" placeholder="Ticker code 1">
+    </div>
+    <div class="col-md-1">
+      <button type="button" class="btn btn-outline-secondary ticker-btn" data-bs-toggle="modal" data-bs-target="#tickerModal" data-input="#ticker1">銘柄検索</button>
     </div>
     <div class="col-md-3">
-      <input type="text" class="form-control" name="ticker2" value="{{ ticker2 }}" placeholder="Ticker code 2">
+      <input type="text" class="form-control" id="ticker2" name="ticker2" value="{{ ticker2 }}" placeholder="Ticker code 2">
+    </div>
+    <div class="col-md-1">
+      <button type="button" class="btn btn-outline-secondary ticker-btn" data-bs-toggle="modal" data-bs-target="#tickerModal" data-input="#ticker2">銘柄検索</button>
     </div>
     <div class="col-md-2">
       <button type="submit" class="btn btn-primary w-100">Analyze</button>
     </div>
   </form>
+  <div class="modal fade" id="tickerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">銘柄検索</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body"></div>
+      </div>
+    </div>
+  </div>
   <div class="row">
     <div class="col-md-6">
     {% if data1.warning %}
@@ -62,4 +80,39 @@
       {% endif %}
   </div>
 </div>
+<script>
+  const industryMap = {{ industry_map | tojson | safe }};
+  const tickerModal = document.getElementById('tickerModal');
+  let activeInput = null;
+  document.querySelectorAll('.ticker-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeInput = document.querySelector(btn.dataset.input);
+    });
+  });
+  tickerModal.addEventListener('show.bs.modal', () => {
+    const body = tickerModal.querySelector('.modal-body');
+    body.innerHTML = '';
+    for (const [industry, tickers] of Object.entries(industryMap)) {
+      const block = document.createElement('div');
+      block.classList.add('mb-2');
+      const heading = document.createElement('h6');
+      heading.textContent = industry;
+      block.appendChild(heading);
+      for (const [ticker, name] of Object.entries(tickers)) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'btn btn-sm btn-outline-primary m-1';
+        b.textContent = `${ticker} ${name}`;
+        b.addEventListener('click', () => {
+          if (activeInput) {
+            activeInput.value = ticker;
+          }
+          bootstrap.Modal.getInstance(tickerModal).hide();
+        });
+        block.appendChild(b);
+      }
+      body.appendChild(block);
+    }
+  });
+</script>
 {% endblock %}

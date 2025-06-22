@@ -7,6 +7,7 @@ from .analysis import (
     analyze_stock_candlestick,
     predict_future_moves,
     _load_and_format_financials,
+    INDUSTRY_TICKER_MAP,
 )
 from .gemini_analyzer import generate_analyst_report
 
@@ -73,5 +74,6 @@ def main_analysis_view(request):
         "ticker2": ticker2,
         "data1": data1,
         "data2": data2,
+        "industry_map": INDUSTRY_TICKER_MAP,
     }
     return render(request, "core/main_analysis.html", context)
