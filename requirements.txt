@@ -14,3 +14,4 @@ jinja2
 lightgbm
 flake8
 google-generativeai
+markdown2

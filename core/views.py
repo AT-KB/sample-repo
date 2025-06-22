@@ -1,4 +1,5 @@
 from django.shortcuts import render
+import markdown2
 from .analysis import (
     get_company_name,
     analyze_stock_candlestick,
@@ -25,12 +26,13 @@ def fetch_data(ticker):
     annual_table = _load_and_format_financials(ticker, "annual")
 
     company_name = get_company_name(ticker)
-    gemini_report = generate_analyst_report(
+    gemini_report_md = generate_analyst_report(
         company_name,
         ticker,
         latest_data_table or "",
         prediction_table or "",
     )
+    gemini_report_html = markdown2.markdown(gemini_report_md)
 
     return {
         "ticker": ticker,
@@ -41,7 +43,7 @@ def fetch_data(ticker):
         "quarterly_table": quarterly_table,
         "annual_table": annual_table,
         "warning": warning,
-        "gemini_report": gemini_report,
+        "gemini_report_html": gemini_report_html,
     }
 
 
