@@ -5,6 +5,7 @@ from .analysis import (
     predict_future_moves,
     _load_and_format_financials,
 )
+from .gemini_analyzer import generate_analyst_report
 
 # Legacy attributes kept for test compatibility
 _load_financial_metrics = None
@@ -23,15 +24,24 @@ def fetch_data(ticker):
     quarterly_table = _load_and_format_financials(ticker, "quarterly")
     annual_table = _load_and_format_financials(ticker, "annual")
 
+    company_name = get_company_name(ticker)
+    gemini_report = generate_analyst_report(
+        company_name,
+        ticker,
+        latest_data_table or "",
+        prediction_table or "",
+    )
+
     return {
         "ticker": ticker,
-        "company_name": get_company_name(ticker),
+        "company_name": company_name,
         "chart_data": chart_data,
         "latest_data_table": latest_data_table,
         "prediction_table": prediction_table,
         "quarterly_table": quarterly_table,
         "annual_table": annual_table,
         "warning": warning,
+        "gemini_report": gemini_report,
     }
 
 

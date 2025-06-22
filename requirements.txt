@@ -13,3 +13,4 @@ pytest
 jinja2
 lightgbm
 flake8
+google-generativeai
