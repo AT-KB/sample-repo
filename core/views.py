@@ -1,5 +1,7 @@
 from django.shortcuts import render
+import pandas as pd
 import markdown2
+
 from .analysis import (
     get_company_name,
     analyze_stock_candlestick,
@@ -19,18 +21,29 @@ def fetch_data(ticker):
     if not ticker:
         return {}
 
-    chart_data, latest_data_table, warning = analyze_stock_candlestick(ticker)
-    prediction_table, _ = predict_future_moves(ticker)
+    chart_data, latest_table_html, warning = analyze_stock_candlestick(ticker)
+    prediction_table_html, _ = predict_future_moves(ticker)
 
     quarterly_table = _load_and_format_financials(ticker, "quarterly")
     annual_table = _load_and_format_financials(ticker, "annual")
+
+    def html_to_records(html):
+        if not html:
+            return []
+        try:
+            return pd.read_html(html)[0].to_dict("records")
+        except Exception:
+            return []
+
+    latest_dict = html_to_records(latest_table_html)
+    prediction_dict = html_to_records(prediction_table_html)
 
     company_name = get_company_name(ticker)
     gemini_report_md = generate_analyst_report(
         company_name,
         ticker,
-        latest_data_table or "",
-        prediction_table or "",
+        latest_dict,
+        prediction_dict,
     )
     gemini_report_html = markdown2.markdown(gemini_report_md)
 
@@ -38,8 +51,8 @@ def fetch_data(ticker):
         "ticker": ticker,
         "company_name": company_name,
         "chart_data": chart_data,
-        "latest_data_table": latest_data_table,
-        "prediction_table": prediction_table,
+        "latest_data_table": latest_table_html,
+        "prediction_table": prediction_table_html,
         "quarterly_table": quarterly_table,
         "annual_table": annual_table,
         "warning": warning,
