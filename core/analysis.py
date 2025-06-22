@@ -8,7 +8,7 @@ import pandas as pd
 import ta
 import yfinance as yf
 import numpy as np
-from lightgbm import LGBMRegressor
+from lightgbm import LGBMClassifier
 from sklearn.model_selection import TimeSeriesSplit
 
 TICKER_NAMES = {
@@ -458,8 +458,12 @@ def predict_future_moves(ticker: str, horizons=None):
         return "custom_rmse", rmse, False
 
     for h in horizons:
-        df[f"target_{h}"] = np.log(df["Close"].shift(-h) / df["Close"])
-        df[f"future_return_{h}"] = df[f"target_{h}"]
+        df[f"target_{h}"] = (
+            df["Close"].shift(-h) > df["Close"]
+        ).astype(int)
+        df[f"future_return_{h}"] = np.log(
+            df["Close"].shift(-h) / df["Close"]
+        )
         tmp = pd.concat([X, df[f"target_{h}"]], axis=1).dropna()
         X_h = tmp[feature_cols]
         y_h = tmp[f"target_{h}"]
@@ -468,24 +472,23 @@ def predict_future_moves(ticker: str, horizons=None):
         model = None
         train_index = None
         for train_index, _ in tscv.split(X_h):
-            model = LGBMRegressor(
+            model = LGBMClassifier(
                 random_state=0,
-                objective=custom_objective,
-                min_data_in_bin=1,
-                min_data_in_leaf=1,
+                learning_rate=0.05,
+                n_estimators=200,
+                num_leaves=31,
+                max_depth=-1,
+                reg_alpha=0.1,
+                reg_lambda=0.1,
+                n_jobs=-1,
             )
-            model.fit(
-                X_h.iloc[train_index],
-                y_h.iloc[train_index],
-                eval_set=[(X_h.iloc[train_index], y_h.iloc[train_index])],
-                eval_metric=custom_eval,
-            )
+            model.fit(X_h.iloc[train_index], y_h.iloc[train_index])
         if model is None:
             continue
-        pred_return = float(model.predict(X.iloc[[-1]]))
-        prob_up = 100 * (1 / (1 + np.exp(-pred_return)))
-        prediction = "UP" if pred_return >= 0 else "DOWN"
-        expected_return = pred_return
+        proba_up = float(model.predict_proba(X.iloc[[-1]])[0, 1])
+        prob_up = 100 * proba_up
+        prediction = "UP" if proba_up >= 0.5 else "DOWN"
+        expected_return = 0.0
 
         results.append(
             {
