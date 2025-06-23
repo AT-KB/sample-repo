@@ -14,6 +14,22 @@ def main():
     response = requests.get(URL)
     response.raise_for_status()
 
+    # ★★★★★ ここからデバッグコード ★★★★★
+    try:
+        # まず、Excelファイルとして読み込めるか試す
+        xls = pd.ExcelFile(BytesIO(response.content))
+        # 存在する全てのシート名を表示する
+        print("--- Available Sheet Names ---")
+        print(xls.sheet_names)
+        print("-----------------------------")
+    except Exception as e:
+        print(f"!!! FAILED to parse Excel file. Error: {e}")
+        # エラーが起きた場合は、ファイルの中身（先頭500バイト）を表示してみる
+        print("--- Raw File Content (first 500 bytes) ---")
+        print(response.content[:500])
+        print("------------------------------------------")
+    # ★★★★★ ここまでデバッグコード ★★★★★
+
     df = pd.read_excel(BytesIO(response.content), sheet_name="プライム")
     df = df[["コード", "銘柄名", "33業種区分"]]
     df["コード"] = df["コード"].astype(str).str.zfill(4)
