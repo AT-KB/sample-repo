@@ -1,7 +1,6 @@
 import os
 from io import BytesIO
 import requests
-import pyxls
 import pandas as pd
 
 URL = "https://www.jpx.co.jp/markets/statistics-equities/misc/tvdivq0000001vg2-att/data_j.xls"
@@ -15,22 +14,7 @@ def main():
     response = requests.get(URL)
     response.raise_for_status()
 
-    # pyxlsで直接.xlsファイルを開く
-    xls_file = pyxls.parse(BytesIO(response.content))
-
-    # "プライム"シートのデータを取得
-    prime_sheet = xls_file.ws('プライム')
-
-    # データをリストのリストとして読み込む
-    data = []
-    for row_idx in range(prime_sheet.max_row + 1):
-        row = [cell.value for cell in prime_sheet.row(row_idx)]
-        data.append(row)
-
-    if not data or len(data) < 2:
-        raise ValueError("Prime sheet is empty or header not found.")
-
-    df = pd.DataFrame(data[1:], columns=data[0])
+    df = pd.read_excel(BytesIO(response.content), sheet_name="プライム")
     df = df[["コード", "銘柄名", "33業種区分"]]
     df["コード"] = df["コード"].astype(str).str.zfill(4)
 
