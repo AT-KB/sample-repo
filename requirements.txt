@@ -15,5 +15,5 @@ pytest
 scikit-learn
 setuptools
 ta
-xlrd==1.2.0
 yfinance
+pyxls
