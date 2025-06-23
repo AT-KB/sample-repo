@@ -1,6 +1,7 @@
 import os
 from io import BytesIO
 import requests
+import pyxls
 import pandas as pd
 
 URL = (
@@ -15,9 +16,28 @@ OUTPUT_PATH = os.path.join(
 
 def main():
     """Download JPX tickers and generate industry map."""
-    response = requests.get(URL)
+    # JPXからExcelファイルをダウンロード
+    url = "https://www.jpx.co.jp/markets/statistics-equities/misc/tvdivq0000001vg2-att/data_j.xls"
+    response = requests.get(url)
     response.raise_for_status()
-    df = pd.read_excel(BytesIO(response.content), sheet_name="プライム", engine="pyxls")
+
+    # pyxlsで直接.xlsファイルを開く
+    xls_file = pyxls.parse(BytesIO(response.content))
+
+    # "プライム"シートのデータを取得
+    prime_sheet = xls_file.ws('プライム')
+
+    # データをリストのリストとして読み込む
+    data = []
+    for row_idx in range(prime_sheet.max_row + 1):
+        row = [cell.value for cell in prime_sheet.row(row_idx)]
+        data.append(row)
+
+    # pandas DataFrameに変換
+    if not data:
+        raise ValueError("Prime sheet is empty or could not be read.")
+
+    df = pd.DataFrame(data[1:], columns=data[0])
     df = df[["コード", "銘柄名", "33業種区分"]]
     df["コード"] = df["コード"].astype(str).str.zfill(4)
 
