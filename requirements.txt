@@ -8,7 +8,7 @@ lightgbm
 markdown2
 matplotlib
 mplfinance
-numpy
+numpy==1.23.5
 pandas==1.5.3
 psycopg2-binary
 pytest

@@ -332,7 +332,7 @@ def analyze_stock_candlestick(ticker: str):
 
     tbl_cols = ["Close", "MACD", "RSI", "eps", "pe"]
     table_df = stock_data.tail(5)[tbl_cols].round(0)
-    table_df = table_df.map(lambda x: "-" if pd.isna(x) else int(x))
+    table_df = table_df.applymap(lambda x: "-" if pd.isna(x) else int(x))
     table_html = table_df.reset_index().rename(columns={"index": "date"}).to_html(
         classes="table table-striped", index=False
     )
