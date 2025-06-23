@@ -23,4 +23,4 @@ EXPOSE 8080
 
 # 起動コマンドを設定
 # まず銘柄リストを生成し、次にgunicornを起動
-CMD ["sh", "-c", "python scripts/generate_ticker_map.py && gunicorn myapp.wsgi --bind 0.0.0.0:8080"]
+CMD python scripts/generate_ticker_map.py && gunicorn myapp.wsgi
