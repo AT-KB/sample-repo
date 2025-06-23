@@ -17,7 +17,7 @@ def main():
     """Download JPX tickers and generate industry map."""
     response = requests.get(URL)
     response.raise_for_status()
-    df = pd.read_excel(BytesIO(response.content), sheet_name="プライム")
+    df = pd.read_excel(BytesIO(response.content), sheet_name="プライム", engine="pyxls")
     df = df[["コード", "銘柄名", "33業種区分"]]
     df["コード"] = df["コード"].astype(str).str.zfill(4)
 
