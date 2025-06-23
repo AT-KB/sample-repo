@@ -1,5 +1,5 @@
-django-environ
 Django>=4.2
+django-environ
 flake8
 google-generativeai
 gunicorn
@@ -13,6 +13,7 @@ pandas==1.5.3
 psycopg2-binary
 pytest
 scikit-learn
+setuptools
 ta
 xlrd==1.2.0
 yfinance
