@@ -3,7 +3,10 @@ from io import BytesIO
 import requests
 import pandas as pd
 
-URL = "https://www.jpx.co.jp/markets/statistics-equities/misc/tvdivq0000001vg2-att/data_j.xls"
+URL = (
+    "https://www.jpx.co.jp/markets/statistics-equities/"
+    "misc/tvdivq0000001vg2-att/data_j.xls"
+)
 
 OUTPUT_PATH = os.path.join(
     os.path.dirname(__file__), "..", "core", "industry_ticker_map.py"
