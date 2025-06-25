@@ -65,18 +65,20 @@ Optional variable: `JQUANTS_TOKEN`.
 
 Install dependencies and run the server:
 
-For local development, it is recommended to use Django's built-in development server. This server automatically reloads on code changes and is easy to use.
+For local development, use Django's built-in development server. It's easy to use and automatically reloads when you change your code.
 
 ```bash
 # 1. Install dependencies
 pip install -r requirements.txt
 
-# 2. Run database migrations
+# 2. Run database migrations (if any)
 python manage.py migrate
 
-# 3. Start the development server (usually on port 8000)
+# 3. Start the development server
 python manage.py runserver
 ```
+Your application will now be running at http://127.0.0.1:8000/.
+IMPORTANT NOTE: The gunicorn command found in railway.json is for the production environment on Railway only. It will not work in your local environment because the $PORT variable is not set. Always use python manage.py runserver for local development.
 
 ## Running Tests
 
