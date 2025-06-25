@@ -65,12 +65,16 @@ Optional variable: `JQUANTS_TOKEN`.
 
 Install dependencies and run the server:
 
+For local development, it is recommended to use Django's built-in development server. This server automatically reloads on code changes and is easy to use.
 
 ```bash
+# 1. Install dependencies
 pip install -r requirements.txt
-# requirements.txt に lightgbm が追加されています
-flake8  # スタイルチェック
+
+# 2. Run database migrations
 python manage.py migrate
+
+# 3. Start the development server (usually on port 8000)
 python manage.py runserver
 ```
 
