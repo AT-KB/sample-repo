@@ -47,6 +47,7 @@ DATABASE_URL=your-database-url
 DEBUG=True
 ALLOWED_HOSTS=*
 JQUANTS_TOKEN=your-token  # optional
+GEMINI_API_KEY=あなたのAPIキー
 ```
 
 **Important:** Variable names must match exactly with no spaces.
