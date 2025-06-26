@@ -1,0 +1,8 @@
+{
+  "build": { "dockerfilePath": "Dockerfile" },
+  "deploy": {
+    "startCommand": "gunicorn myapp.wsgi --bind 0.0.0.0:8000 --log-file -",
+    "healthcheckPath": "/",
+    "port": 8000
+  }
+}
