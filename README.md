@@ -110,3 +110,17 @@ These indicators rely on the `ta` package, which is already listed in
 ```bash
 python scripts/generate_ticker_map.py
 ```
+
+## Deploy to Railway
+
+1. Railway CLI をインストール（ローカル環境で一度だけ実行）:
+   npm:
+     npm install -g railway
+   Homebrew (macOS):
+     brew tap railway/homebrew && brew install railway
+
+2. CLI でログイン:
+   railway login
+
+3. デプロイ:
+   railway up
