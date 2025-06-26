@@ -113,14 +113,29 @@ python scripts/generate_ticker_map.py
 
 ## Deploy to Railway
 
-1. Railway CLI をインストール（ローカル環境で一度だけ実行）:
-   npm:
-     npm install -g railway
-   Homebrew (macOS):
-     brew tap railway/homebrew && brew install railway
+1. **Railway CLI をインストール**（ローカル環境で一度だけ）
+   ```bash
+   # npm
+   npm install -g railway
+   # macOS Homebrew
+   brew tap railway/homebrew && brew install railway
+   ```
 
-2. CLI でログイン:
+2. **ログイン＆プロジェクト設定**
+   ```bash
    railway login
+   railway link       # 既存プロジェクトを紐付け
+   # または
+   railway init       # 新規プロジェクト作成
+   ```
 
-3. デプロイ:
-   railway up
+3. **デプロイ**
+   ```bash
+   railway up --detach
+   ```
+
+4. **環境変数の登録**
+   ```bash
+   railway variables set GEMINI_API_KEY=<あなたのキー>
+   railway variables set JQUANTS_TOKEN=<あなたのトークン>
+   ```
