@@ -31,26 +31,20 @@ def generate_analyst_report(
         else "（モデル予測データなし）"
     )
 
-    prompt = f"""
-あなたは、機械学習モデルの出力を解釈し、具体的な投資戦略を立案することに特化した、
-トップクラスのクオンツ・アナリストです。感情や主観を排し、与えられたデータのみに基
-づいて、論理的な結論を導き出します。
-
-これから、以下のデータに基づいて、**{ticker_name} ({ticker_code})** の投資判断レポート
-を**指定のMarkdown形式**で作成してください。**指定されたフォーマット以外の余計な文
-章は一切含めないでください。**
+    reasoning_prompt = f"""
+あなたはトップクラスのクオンツ・アナリストです。以下のデータを精査し、投資判断に必要な要点を日本語で箇条書きしてください。
 
 ---
-### **【入力データ】**
-
-#### 最新のテクニカル指標
+### 最新のテクニカル指標
 {latest_data_text}
 
-#### 機械学習モデルによる予測
+### 機械学習モデルによる予測
 {predictions_text}
 ---
+"""
 
-### **【アウトプット】**
+    final_prompt_template = """
+先ほどの考察結果を基に、{ticker_name} ({ticker_code}) の投資判断レポートをMarkdown形式でまとめてください。
 
 ```markdown
 ### 投資戦略サマリー：{ticker_name}
@@ -72,12 +66,19 @@ def generate_analyst_report(
   あるいは、ATR指標の数値を参考に、「現在の価格からATRの2倍である`ZZ`円下を損切りラインとする」など、よりテクニカルな根拠を提示）
 ```
 """
+
     try:
         model = genai.GenerativeModel("gemini-1.5-flash")
         generation_config = genai.types.GenerationConfig(temperature=0.2)
-        response = model.generate_content(
-            prompt, generation_config=generation_config
+
+        reasoning_resp = model.generate_content(
+            reasoning_prompt, generation_config=generation_config
         )
-        return response.text
+        final_prompt = final_prompt_template.format(ticker_name=ticker_name, ticker_code=ticker_code) + "\n" + reasoning_resp.text
+
+        final_resp = model.generate_content(
+            final_prompt, generation_config=generation_config
+        )
+        return final_resp.text
     except Exception as e:
         return f"Error generating report from Gemini: {e}"
