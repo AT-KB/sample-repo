@@ -21,7 +21,7 @@ from core.views import health_check
 
 urlpatterns = [
     # ヘルスチェック（RailwayのhealthcheckPath用）
-    path("", health_check, name="health_check"),
+    path("health/", health_check, name="health_check"),
     # 既存ルーティング
     path("admin/", admin.site.urls),
     path("", include("core.urls")),
