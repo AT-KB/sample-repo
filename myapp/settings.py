@@ -1,4 +1,3 @@
-
 """
 Django settings for myapp project.
 
@@ -36,7 +35,7 @@ SECRET_KEY = env("SECRET_KEY", default="django-insecure-placeholder-for-dev")
 DEBUG = env("DEBUG")
 
 # Allowed hosts configured for local and Railway deployments
-# Railwayのドメインとローカルホストを許可
+# Railwayのドメインとローカルホスト、ヘルスチェック用ホストを許可
 ALLOWED_HOSTS = env.list(
     "ALLOWED_HOSTS",
     default=["localhost", "127.0.0.1", ".railway.app", "healthcheck.railway.app"],
@@ -57,7 +56,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",  # 修正済み
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -75,7 +74,7 @@ TEMPLATES = [
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
-                "django.template.context_processors.debug", # デバッグ用に復活
+                "django.template.context_processors.debug",
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
@@ -112,9 +111,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = "ja" # 日本語に変更
+LANGUAGE_CODE = "ja"
 
-TIME_ZONE = "Asia/Tokyo" # 日本時間に変更
+TIME_ZONE = "Asia/Tokyo"
 
 USE_I18N = True
 
@@ -125,14 +124,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
-# collectstaticで静的ファイルを集める先のディレクトリ
 STATIC_ROOT = BASE_DIR / "staticfiles"
-# Whitenoiseが圧縮された静的ファイルを配信するための設定
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
