@@ -1,3 +1,4 @@
+--- START OF FILE railway.json ---
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
@@ -10,3 +11,4 @@
     "healthcheckTimeout": 120
   }
 }
+--- END OF FILE railway.json ---
