@@ -1,4 +1,3 @@
---- START OF FILE railway.json ---
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
@@ -6,9 +5,8 @@
     "buildCommand": "python3 -m venv .venv && . .venv/bin/activate && pip install --upgrade pip && pip install -r requirements.txt && python manage.py collectstatic --noinput"
   },
   "deploy": {
-    "startCommand": ". .venv/bin/activate && python manage.py migrate && gunicorn myapp.wsgi --log-file -",
+    "startCommand": ". .venv/bin/activate && python manage.py migrate && gunicorn myapp.wsgi --bind 0.0.0.0:$PORT --log-file -",
     "healthcheckPath": "/health/",
     "healthcheckTimeout": 120
   }
 }
---- END OF FILE railway.json ---
