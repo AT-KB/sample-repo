@@ -37,7 +37,10 @@ DEBUG = env("DEBUG")
 
 # Allowed hosts configured for local and Railway deployments
 # Railwayのドメインとローカルホストを許可
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1", ".railway.app"])
+ALLOWED_HOSTS = env.list(
+    "ALLOWED_HOSTS",
+    default=["localhost", "127.0.0.1", ".railway.app", "healthcheck.railway.app"],
+)
 
 
 # Application definition
