@@ -46,35 +46,40 @@ def generate_analyst_report(
     final_prompt_template = """
 先ほどの考察結果を基に、{ticker_name} ({ticker_code}) の投資判断レポートをMarkdown形式でまとめてください。
 
+{reasoning_text}
+
 ```markdown
 ### 投資戦略サマリー：{ticker_name}
 
 | 評価軸 | 分析結果と判断 |
 |:---|:---|
-| **短期トレンド (1-7日)** | （1日後・7日後の予測と期待リターンに基づき、「強気」「中立」「弱気」で評価。その根拠も簡潔に記述） |
-| **中期トレンド (28日)** | （28日後の予測と期待リターンに基づき、「強気」「中立」「弱気」で評価。その根拠も簡潔に記述） |
-| **短期モデルの信頼性 (1-7日)** | （1日後・7日後の**上昇確率**に基づき、確信度を[高/中/低]で評価。例: 「上昇確率が32%, 41%と50%に近く、確信度は低い」） |
-| **中期モデルの信頼性 (28日)** | （28日後の**上昇確率**に基づき、確信度を[高/中/低]で評価。例: 「上昇確率が98%と極端な値を示しており、確信度は非常に高い」） |
-| **総合評価** | （上記4点を統合した最終的な投資スタンスを「買い推奨」「様子見」「売り推奨」で明確に記述） |
+| **短期トレンド (1-7日)** | （考察結果から短期トレンドの評価と根拠を抽出して記述） |
+| **中期トレンド (28日)** | （考察結果から中期トレンドの評価と根拠を抽出して記述） |
+| **短期モデルの信頼性 (1-7日)** | （考察結果から短期モデルの信頼性評価を抽出して記述） |
+| **中期モデルの信頼性 (28日)** | （考察結果から中期モデルの信頼性評価を抽出して記述） |
+| **総合評価** | （考察結果から総合評価を抽出し、「買い推奨」「様子見」「売り推奨」のいずれかで記述） |
 
 ## 4. 具体的な戦略プラン
-- **エントリーポイント:** （モデルの予測が「UP」で、かつ期待リターンがプラスの場合、具体的な価格帯を推奨。例:「現在の価格`XXXX`円近辺での打診買いを推奨」。
-  DOWN予測の場合は「エントリー見送り」と記述）
-- **ターゲットプライス:** （期待リターンが`+Y%`なら、現在の価格にY%を乗じた価格を目標値として提示。
-  例:「期待リターン`+2.5%`に基づき、目標株価は`YYYY`円」）
-- **ストップロス:** （期待リターンがマイナスの場合、その数値を参考に損切りラインを提示。
-  あるいは、ATR指標の数値を参考に、「現在の価格からATRの2倍である`ZZ`円下を損切りラインとする」など、よりテクニカルな根拠を提示）
+- **エントリーポイント:** （考察結果からエントリーポイントに関する記述を抽出）
+- **ターゲットプライス:** （考察結果からターゲットプライスに関する記述を抽出）
+- **ストップロス:** （考察結果からストップロスに関する記述を抽出）
 ```
 """
-
     try:
         model = genai.GenerativeModel("gemini-1.5-flash")
         generation_config = genai.types.GenerationConfig(temperature=0.2)
 
+        # ステップ1: 思考
         reasoning_resp = model.generate_content(
             reasoning_prompt, generation_config=generation_config
         )
-        final_prompt = final_prompt_template.format(ticker_name=ticker_name, ticker_code=ticker_code) + "\n" + reasoning_resp.text
+
+        # ステップ2: 校正
+        final_prompt = final_prompt_template.format(
+            ticker_name=ticker_name,
+            ticker_code=ticker_code,
+            reasoning_text=reasoning_resp.text,
+        )
 
         final_resp = model.generate_content(
             final_prompt, generation_config=generation_config
