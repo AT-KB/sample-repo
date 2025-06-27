@@ -18,3 +18,6 @@ ta
 markdown2
 requests
 # pytest and flake8 are for development, not required in production
+
+setuptools>=65.5.1
+wheel
