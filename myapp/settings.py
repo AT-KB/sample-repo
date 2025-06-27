@@ -15,6 +15,10 @@ import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+# -------------------------------------------------------------------
+# collectstatic 用の出力先を指定
+STATIC_ROOT = BASE_DIR / "staticfiles"
+# -------------------------------------------------------------------
 
 # Environment setup
 env = environ.Env(
