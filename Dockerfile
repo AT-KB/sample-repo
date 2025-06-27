@@ -1,4 +1,7 @@
 FROM python:3.11.10-slim
+# Build-time SECRET_KEY arg for collectstatic
+ARG SECRET_KEY="django-insecure-placeholder"
+ENV SECRET_KEY=${SECRET_KEY}
 
 WORKDIR /app
 
