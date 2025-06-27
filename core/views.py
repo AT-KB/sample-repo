@@ -1,6 +1,8 @@
 from django.shortcuts import render
 import pandas as pd
 import markdown2
+import logging
+from django.http import HttpResponse
 
 from .analysis import (
     get_company_name,
@@ -10,6 +12,13 @@ from .analysis import (
 )
 from .industry_ticker_map import INDUSTRY_TICKER_MAP
 from .gemini_analyzer import generate_analyst_report
+
+
+def health_check(request):
+    """軽量なヘルスチェック用エンドポイント"""
+    logging.getLogger(__name__).debug("health check accessed")
+    return HttpResponse("OK")
+
 
 # Legacy attributes kept for test compatibility
 _load_financial_metrics = None
