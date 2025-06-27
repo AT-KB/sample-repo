@@ -1,8 +1,12 @@
 {
-  "build": { "dockerfilePath": "Dockerfile" },
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "python3 -m venv .venv && . .venv/bin/activate && pip install --upgrade pip && pip install -r requirements.txt && python manage.py collectstatic --noinput"
+  },
   "deploy": {
-    "startCommand": "gunicorn myapp.wsgi --bind 0.0.0.0:8000 --log-file -",
-    "healthcheckPath": "/",
-    "port": 8000
+    "startCommand": ". .venv/bin/activate && python manage.py migrate && gunicorn myapp.wsgi --log-file -",
+    "healthcheckPath": "/health/",
+    "healthcheckTimeout": 120
   }
 }

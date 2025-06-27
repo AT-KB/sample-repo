@@ -93,7 +93,7 @@ class AnalysisTests(SimpleTestCase):
         self, mock_analyze, mock_predict, mock_fin
     ):
         mock_analyze.return_value = ("chart", "<table></table>", None)
-        response = self.client.get("/analysis/?ticker1=7203", HTTP_HOST="localhost")
+        response = self.client.get("/?ticker1=7203", HTTP_HOST="localhost")
         self.assertEqual(response.status_code, 200)
         mock_analyze.assert_called_once_with("7203")
         self.assertIn("chart", response.content.decode())
@@ -107,7 +107,7 @@ class AnalysisTests(SimpleTestCase):
     ):
         mock_analyze.return_value = ("chart", "<table></table>", None)
         response = self.client.get(
-            "/analysis/?ticker1=7203&ticker2=6758", HTTP_HOST="localhost"
+            "/?ticker1=7203&ticker2=6758", HTTP_HOST="localhost"
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(mock_analyze.call_count, 2)
@@ -138,7 +138,7 @@ class AnalysisTests(SimpleTestCase):
             "<table><tr><th>Total Revenue</th><td>1</td></tr></table>"
         )
         response = self.client.get(
-            "/analysis/?ticker1=7203", HTTP_HOST="localhost"
+            "/?ticker1=7203", HTTP_HOST="localhost"
         )
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
@@ -155,7 +155,7 @@ class AnalysisTests(SimpleTestCase):
             "<h3>Quarterly Financials</h3><table></table>",
             "<h3>Annual Financials</h3><table></table>",
         ]
-        response = self.client.get("/analysis/?ticker1=7203", HTTP_HOST="localhost")
+        response = self.client.get("/?ticker1=7203", HTTP_HOST="localhost")
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
         self.assertIn("Quarterly Financials", content)
