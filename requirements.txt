@@ -5,6 +5,7 @@ django-environ
 numpy==1.23.5
 pandas==1.5.3
 google-generativeai
+whitenoise
 
 # テストで必要なテンプレートエンジン
 Jinja2>=3.0.0
