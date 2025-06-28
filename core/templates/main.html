@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<ul id="industry-list"></ul>
+<ul id="ticker-list"></ul>
+<input id="ticker-code" name="ticker" />
+<script src="{% static 'js/ticker-selector.js' %}"></script>
+{% endblock %}
