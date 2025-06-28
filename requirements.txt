@@ -2,8 +2,8 @@ Django>=4.2
 gunicorn
 psycopg2-binary
 django-environ
-numpy==1.25.3 
-pandas>=2.0,<2.2
+numpy==1.23.5
+pandas==1.5.3
 google-generativeai
 whitenoise
 
