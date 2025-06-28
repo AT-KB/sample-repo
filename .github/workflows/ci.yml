@@ -22,9 +22,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Create venv & install dependencies
+        shell: bash
         run: |
           python -m venv .venv
-          # venv の python 経由で pip をアップグレードして必要なツールを追加
+          # venv 下の Python/pip を直接使う
           .venv/bin/python -m pip install --upgrade pip setuptools wheel
           # 本番依存＋テスト依存をまとめてインストール
           .venv/bin/python -m pip install \
@@ -32,15 +33,17 @@ jobs:
             -r requirements-dev.txt
 
       - name: Run Tests
+        shell: bash
         env:
           SECRET_KEY: "a-dummy-secret-key-for-testing"
           DEBUG: "True"
           DATABASE_URL: "sqlite:///:memory:"
         run: |
-          # venv の pytest を直接呼び出す
+          # 仮想環境の pytest を直接実行
           .venv/bin/python -m pytest -q
 
       - name: Lint with flake8
+        shell: bash
         run: |
           # flake8 は requirements-dev.txt に含まれている想定なので、インストール不要
           .venv/bin/python -m flake8 .
