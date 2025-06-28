@@ -2,12 +2,12 @@ Django>=4.2
 gunicorn
 psycopg2-binary
 django-environ
-numpy==1.23.5
-pandas==1.5.3
+numpy>=1.26,<2.4          # Py 3.12 を公式サポート
+pandas==1.5.3             # 1.5.x は 1.26 系 NumPy と互換
 google-generativeai
 whitenoise
 
-# テストで必要なテンプレートエンジン
+# テストや補助ライブラリ
 Jinja2>=3.0.0
 xlrd==1.2.0
 yfinance
@@ -19,7 +19,6 @@ ta
 markdown2
 requests
 
-# pytest と flake8 は開発用（production には不要）
 pytest
 flake8
 
