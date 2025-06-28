@@ -18,7 +18,10 @@ lightgbm
 ta
 markdown2
 requests
-# pytest and flake8 are for development, not required in production
+
+# pytest と flake8 は開発用（production には不要）
+pytest
+flake8
 
 setuptools>=65.5.1
 wheel
