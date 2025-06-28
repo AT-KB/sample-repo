@@ -1,3 +1,4 @@
+"""core.analysis の関数テスト＆ビュー経由テスト"""
 import os
 import sys
 import types
@@ -9,19 +10,19 @@ from django.test import SimpleTestCase
 from django.urls import reverse
 from unittest.mock import patch
 
-# --- Django環境設定 ---
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myapp.settings")
-os.environ.setdefault("SECRET_KEY", "a-dummy-secret-key-for-testing")
-os.environ.setdefault("DEBUG", "True")
+from core.analysis import analyze_stock_candlestick, predict_future_moves
+
+# --- Django 環境設定 (この後にコードは書かない) ---
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myapp.settings')
+os.environ.setdefault('SECRET_KEY', 'a-dummy-secret-key-for-testing')
+os.environ.setdefault('DEBUG', 'True')
 django.setup()
 
-# --- ダミーindustry_ticker_mapモジュール登録 ---
+# ダミーの industry_ticker_map モジュール
 sys.modules.setdefault(
-    "core.industry_ticker_map",
+    'core.industry_ticker_map',
     types.SimpleNamespace(INDUSTRY_TICKER_MAP={}),
 )
-
-from core.analysis import analyze_stock_candlestick, predict_future_moves
 
 # --- テスト用サンプルデータ準備 ---
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "sample_prices.csv"
