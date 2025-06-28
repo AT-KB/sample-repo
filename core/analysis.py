@@ -25,6 +25,15 @@ TICKER_NAMES = {
 }
 
 
+# Shared header names for prediction tables
+PREDICTION_COLUMNS = [
+    "予測日数",
+    "予想方向",
+    "上昇確率",
+    "期待リターン",
+]
+
+
 def _get_first_non_empty(tkr: yf.Ticker, attrs: list[str]) -> pd.DataFrame:
     """Return the first non-empty DataFrame among ticker attributes."""
     for attr in attrs:
@@ -499,10 +508,10 @@ def predict_future_moves(ticker: str, horizons=None):
 
         results.append(
             {
-                "予測日数": h,
-                "Prediction": prediction,
-                "上昇確率": round(prob_up * 100),
-                "期待リターン": expected_return,
+                PREDICTION_COLUMNS[0]: h,
+                PREDICTION_COLUMNS[1]: prediction,
+                PREDICTION_COLUMNS[2]: round(prob_up * 100),
+                PREDICTION_COLUMNS[3]: expected_return,
             }
         )
 
@@ -510,7 +519,7 @@ def predict_future_moves(ticker: str, horizons=None):
         return (None, None)
 
     table = pd.DataFrame(results)
-    prob_col = "上昇確率"
+    prob_col = PREDICTION_COLUMNS[2]
 
     def color_scale(val: float) -> str:
         if val == 50:
@@ -523,7 +532,7 @@ def predict_future_moves(ticker: str, horizons=None):
 
     styled_table = (
         table.style.applymap(color_scale, subset=[prob_col])
-        .format({prob_col: "{:.0f}%", "期待リターン": lambda x: f"{x:+.2f}%"})
+        .format({prob_col: "{:.0f}%", PREDICTION_COLUMNS[3]: lambda x: f"{x:+.2f}%"})
         .hide(axis="index")
         .set_table_attributes('class="table table-striped"')
     )

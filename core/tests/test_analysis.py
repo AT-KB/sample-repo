@@ -16,12 +16,18 @@ from core.analysis import analyze_stock_candlestick, predict_future_moves
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myapp.settings')
 os.environ.setdefault('SECRET_KEY', 'a-dummy-secret-key-for-testing')
 os.environ.setdefault('DEBUG', 'True')
+os.environ['ALLOWED_HOSTS'] = 'localhost,127.0.0.1'
 django.setup()
 
 # ダミーの industry_ticker_map モジュール
 sys.modules.setdefault(
     'core.industry_ticker_map',
     types.SimpleNamespace(INDUSTRY_TICKER_MAP={}),
+)
+# ダミーの gemini_analyzer モジュール
+sys.modules.setdefault(
+    'core.gemini_analyzer',
+    types.SimpleNamespace(generate_analyst_report=lambda *a, **k: ""),
 )
 
 # --- テスト用サンプルデータ準備 ---
@@ -50,7 +56,7 @@ class AnalysisTests(SimpleTestCase):
         self.assertIsNone(none_val)
         if html:
             self.assertIn("<table", html)
-            self.assertIn("Prediction", html)
+            self.assertIn("予想方向", html)
             self.assertIn("期待リターン", html)
 
     @patch("core.views._load_and_format_financials", return_value="")
