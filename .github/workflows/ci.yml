@@ -45,5 +45,5 @@ jobs:
       - name: Lint with flake8
         shell: bash
         run: |
-          # flake8 は requirements-dev.txt に含まれている想定なので、インストール不要
-          .venv/bin/python -m flake8 .
+          # 仮想環境以下を除外して lint
+          .venv/bin/python -m flake8 . --exclude .venv
