@@ -6,6 +6,7 @@ numpy>=1.26,<2.4          # Py 3.12 を公式サポート
 pandas==1.5.3             # 1.5.x は 1.26 系 NumPy と互換
 google-generativeai
 whitenoise
+djangorestframework
 
 # テストや補助ライブラリ
 Jinja2>=3.0.0

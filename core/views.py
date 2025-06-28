@@ -1,8 +1,10 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 import pandas as pd
 import markdown2
 import logging
 from django.http import HttpResponse
+from rest_framework.views import APIView
+from rest_framework.response import Response
 
 from .analysis import (
     get_company_name,
@@ -11,6 +13,7 @@ from .analysis import (
     _load_and_format_financials,
 )
 from .industry_ticker_map import INDUSTRY_TICKER_MAP
+from .models import Industry, Ticker
 from .gemini_analyzer import generate_analyst_report
 
 
@@ -86,3 +89,24 @@ def main_analysis_view(request):
         "industry_map": INDUSTRY_TICKER_MAP,
     }
     return render(request, "core/main_analysis.html", context)
+
+
+class IndustryListAPIView(APIView):
+    """Return all industries."""
+
+    def get(self, request):
+        industries = Industry.objects.all().values("id", "name")
+        return Response(list(industries))
+
+
+class IndustryTickerAPIView(APIView):
+    """Return tickers for a specific industry."""
+
+    def get(self, request, pk):
+        industry = get_object_or_404(Industry, pk=pk)
+        tickers = (
+            Ticker.objects.filter(industry=industry)
+            .values("code", "name")
+            .order_by("code")
+        )
+        return Response(list(tickers))
