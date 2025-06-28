@@ -2,7 +2,7 @@ Django>=4.2
 gunicorn
 psycopg2-binary
 django-environ
-numpy>=1.26,<2.4          # Py 3.12 を公式サポート
+numpy>=1.25,<1.26
 pandas==1.5.3             # 1.5.x は 1.26 系 NumPy と互換
 google-generativeai
 whitenoise
