@@ -65,25 +65,31 @@ def generate_analyst_report(
 - **ストップロス:** （考察結果からストップロスに関する記述を抽出）
 ```
 """
-    try:
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        generation_config = genai.types.GenerationConfig(temperature=0.2)
+    model = genai.GenerativeModel("gemini-1.5-flash")
+    generation_config = genai.types.GenerationConfig(temperature=0.2)
 
-        # ステップ1: 思考
+    # ステップ1: 思考
+    try:
         reasoning_resp = model.generate_content(
             reasoning_prompt, generation_config=generation_config
         )
+    except Exception as e:
+        logging.error(f"Gemini call failed: {e}", exc_info=True)
+        return "（AIレポート生成エラー）"
 
-        # ステップ2: 校正
-        final_prompt = final_prompt_template.format(
-            ticker_name=ticker_name,
-            ticker_code=ticker_code,
-            reasoning_text=reasoning_resp.text,
-        )
+    # ステップ2: 校正
+    final_prompt = final_prompt_template.format(
+        ticker_name=ticker_name,
+        ticker_code=ticker_code,
+        reasoning_text=reasoning_resp.text,
+    )
 
+    try:
         final_resp = model.generate_content(
             final_prompt, generation_config=generation_config
         )
-        return final_resp.text
     except Exception as e:
-        return f"Error generating report from Gemini: {e}"
+        logging.error(f"Gemini call failed: {e}", exc_info=True)
+        return "（AIレポート生成エラー）"
+
+    return final_resp.text
