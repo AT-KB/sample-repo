@@ -4,28 +4,26 @@ import types
 from pathlib import Path
 
 import django
+import pandas as pd
 from django.test import SimpleTestCase
 from django.urls import reverse
 from unittest.mock import patch
 
-import pandas as pd
-
-# ─── Django 環境のセットアップ ───────────────────────────────
+# --- Django環境設定 ---
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myapp.settings")
 os.environ.setdefault("SECRET_KEY", "a-dummy-secret-key-for-testing")
 os.environ.setdefault("DEBUG", "True")
 django.setup()
 
-# ─── industry_ticker_map のダミーモジュール ────────────────────
+# --- ダミーindustry_ticker_mapモジュール登録 ---
 sys.modules.setdefault(
     "core.industry_ticker_map",
     types.SimpleNamespace(INDUSTRY_TICKER_MAP={}),
 )
 
-# ─── テスト対象のインポート ─────────────────────────────────
 from core.analysis import analyze_stock_candlestick, predict_future_moves
 
-# ─── テスト用フィクスチャ ───────────────────────────────────
+# --- テスト用サンプルデータ準備 ---
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "sample_prices.csv"
 SAMPLE_DF = pd.read_csv(FIXTURE_PATH, index_col="Date", parse_dates=True)
 SAMPLE_FUND = pd.DataFrame(
