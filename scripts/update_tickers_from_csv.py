@@ -12,7 +12,7 @@ from core.models import Industry, Ticker  # noqa: E402
 
 # スクリプトファイルの場所を基点にプロジェクトルートの絶対パスを取得
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+CSV_PATH = BASE_DIR / "data_j.csv"
 KEEP_MARKETS = {
     "プライム（内国株式）",
     "グロース（内国株式）",
