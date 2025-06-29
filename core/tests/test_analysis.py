@@ -6,7 +6,7 @@ from pathlib import Path
 
 import django
 import pandas as pd
-from django.test import SimpleTestCase
+from django.test import TestCase
 from django.urls import reverse
 from unittest.mock import patch
 
@@ -16,8 +16,10 @@ from core.analysis import analyze_stock_candlestick, predict_future_moves
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myapp.settings')
 os.environ.setdefault('SECRET_KEY', 'a-dummy-secret-key-for-testing')
 os.environ.setdefault('DEBUG', 'True')
+os.environ['DATABASE_URL'] = 'sqlite:///db.sqlite3'
 os.environ['ALLOWED_HOSTS'] = 'localhost,127.0.0.1'
 django.setup()
+from core.models import Industry, Ticker
 
 # ダミーの industry_ticker_map モジュール
 sys.modules.setdefault(
@@ -39,8 +41,17 @@ SAMPLE_FUND = pd.DataFrame(
 )
 
 
-class AnalysisTests(SimpleTestCase):
+from django.test import TestCase
+
+
+class AnalysisTests(TestCase):
     """core.analysis 関数と main_analysis ビューのテスト"""
+
+    @classmethod
+    def setUpTestData(cls):
+        industry = Industry.objects.create(name="dummy")
+        Ticker.objects.create(code="7203", name="Toyota", industry=industry)
+        Ticker.objects.create(code="6758", name="Sony", industry=industry)
 
     @patch("core.analysis.yf.download", return_value=SAMPLE_DF.copy())
     def test_candlestick_chart_generation(self, mock_download):

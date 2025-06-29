@@ -12,7 +12,7 @@ from .analysis import (
     predict_future_moves,
     _load_and_format_financials,
 )
-from .industry_ticker_map import INDUSTRY_TICKER_MAP
+from collections import OrderedDict
 from .models import Industry, Ticker
 from .gemini_analyzer import generate_analyst_report
 
@@ -81,12 +81,18 @@ def main_analysis_view(request):
     data1 = fetch_data(ticker1)
     data2 = fetch_data(ticker2)
 
+    industries = Industry.objects.all().prefetch_related("ticker_set").order_by("name")
+    industry_map_data = OrderedDict()
+    for industry in industries:
+        tickers = industry.ticker_set.order_by("code").values("code", "name")
+        industry_map_data[industry.name] = list(tickers)
+
     context = {
         "ticker1": ticker1,
         "ticker2": ticker2,
         "data1": data1,
         "data2": data2,
-        "industry_map": INDUSTRY_TICKER_MAP,
+        "industry_map": industry_map_data,
     }
     return render(request, "core/main_analysis.html", context)
 
