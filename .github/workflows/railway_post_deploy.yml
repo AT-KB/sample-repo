@@ -1,11 +1,14 @@
 name: Railway Post Deploy
 
 on:
-  deployment_status:
+  workflow_run:
+    workflows: ["Deploy to Railway"]
+    types:
+      - completed
 
 jobs:
   post-deploy-commands:
-    if: ${{ github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'production' && contains(github.event.deployment_status.environment_url, 'railway.app') }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
