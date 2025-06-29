@@ -1,0 +1,20 @@
+name: Railway Post Deploy
+
+on:
+  deployment_status:
+
+jobs:
+  post-deploy-commands:
+    if: ${{ github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'production' && contains(github.event.deployment_status.environment_url, 'railway.app') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: railwayapp/cli@v2
+      - name: Run Migrate
+        run: railway run python manage.py migrate
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      - name: Run Script to Populate Data
+        run: railway run python scripts/update_tickers_from_csv.py
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
