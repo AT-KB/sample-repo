@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import django
 import pandas as pd
 from django.db import transaction
@@ -8,7 +9,9 @@ django.setup()
 
 from core.models import Industry, Ticker  # noqa: E402
 
-CSV_PATH = os.path.join(os.path.dirname(__file__), "..", "data_j.csv")
+# スクリプトファイルの場所を基点にプロジェクトルートの絶対パスを取得
+BASE_DIR = Path(__file__).resolve().parent.parent
+CSV_PATH = BASE_DIR / "data_j.csv"
 
 KEEP_MARKETS = {
     "プライム（内国株式）",
