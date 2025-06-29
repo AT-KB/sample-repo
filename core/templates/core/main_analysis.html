@@ -92,27 +92,27 @@
   tickerModal.addEventListener('show.bs.modal', () => {
     const body = tickerModal.querySelector('.modal-body');
     body.innerHTML = '';
-    for (const [industry, tickers] of Object.entries(industryMap)) {
-      const block = document.createElement('div');
-      block.classList.add('mb-2');
-      const heading = document.createElement('h6');
-      heading.textContent = industry;
-      block.appendChild(heading);
-      for (const [ticker, name] of Object.entries(tickers)) {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'btn btn-sm btn-outline-primary m-1';
-        b.textContent = `${ticker} ${name}`;
-        b.addEventListener('click', () => {
-          if (activeInput) {
-            activeInput.value = ticker;
-          }
-          bootstrap.Modal.getInstance(tickerModal).hide();
+      for (const [industry, tickers] of Object.entries(industryMap)) {
+        const block = document.createElement('div');
+        block.classList.add('mb-2');
+        const heading = document.createElement('h6');
+        heading.textContent = industry;
+        block.appendChild(heading);
+        tickers.forEach(t => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'btn btn-sm btn-outline-primary m-1';
+          b.textContent = `${t.code} ${t.name}`;
+          b.addEventListener('click', () => {
+            if (activeInput) {
+              activeInput.value = t.code;
+            }
+            bootstrap.Modal.getInstance(tickerModal).hide();
+          });
+          block.appendChild(b);
         });
-        block.appendChild(b);
-      }
   body.appendChild(block);
-    }
+      }
   });
 </script>
 <script src="{% static 'js/ticker-selector.js' %}"></script>
