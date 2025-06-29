@@ -80,40 +80,51 @@
       {% endif %}
   </div>
 </div>
-<script>
+  <script>
   const industryMap = {{ industry_map | tojson | safe }};
   const tickerModal = document.getElementById('tickerModal');
   let activeInput = null;
+
+  // どの「銘柄検索」ボタンが押されたかを記録する
   document.querySelectorAll('.ticker-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       activeInput = document.querySelector(btn.dataset.input);
     });
   });
+
+  // モーダルが表示される直前のイベントを捕捉
   tickerModal.addEventListener('show.bs.modal', () => {
     const body = tickerModal.querySelector('.modal-body');
+    // モーダルの中身を一度空にする
     body.innerHTML = '';
-      for (const [industry, tickers] of Object.entries(industryMap)) {
-        const block = document.createElement('div');
-        block.classList.add('mb-2');
-        const heading = document.createElement('h6');
-        heading.textContent = industry;
-        block.appendChild(heading);
-        tickers.forEach(t => {
-          const b = document.createElement('button');
-          b.type = 'button';
-          b.className = 'btn btn-sm btn-outline-primary m-1';
-          b.textContent = `${t.code} ${t.name}`;
-          b.addEventListener('click', () => {
-            if (activeInput) {
-              activeInput.value = t.code;
-            }
-            bootstrap.Modal.getInstance(tickerModal).hide();
-          });
-          block.appendChild(b);
+
+    // industryMapのデータを使って、業種と銘柄のボタンを動的に生成する
+    for (const [industry, tickers] of Object.entries(industryMap)) {
+      const industryBlock = document.createElement('div');
+      industryBlock.className = 'mb-3';
+
+      const industryHeading = document.createElement('h6');
+      industryHeading.textContent = industry;
+      industryBlock.appendChild(industryHeading);
+
+      tickers.forEach(ticker => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn btn-sm btn-outline-primary m-1';
+        button.textContent = `${ticker.code} ${ticker.name}`;
+
+        // ボタンがクリックされた時の処理
+        button.addEventListener('click', () => {
+          if (activeInput) {
+            activeInput.value = ticker.code; // 銘柄コードを入力欄に設定
+          }
+          bootstrap.Modal.getInstance(tickerModal).hide(); // モーダルを閉じる
         });
-  body.appendChild(block);
-      }
+        industryBlock.appendChild(button);
+      });
+
+      body.appendChild(industryBlock);
+    }
   });
-</script>
-<script src="{% static 'js/ticker-selector.js' %}"></script>
+  </script>
 {% endblock %}
