@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load json_extras %}
+{% load json_extras static %}
 {% block content %}
 <h1>Candlestick Analysis</h1>
   <form method="get" class="row g-2 mb-3">
@@ -111,8 +111,9 @@
         });
         block.appendChild(b);
       }
-      body.appendChild(block);
+  body.appendChild(block);
     }
   });
 </script>
+<script src="{% static 'js/ticker-selector.js' %}"></script>
 {% endblock %}

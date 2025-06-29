@@ -136,6 +136,15 @@ python scripts/generate_ticker_map.py
 
 4. **環境変数の登録**
    ```bash
-   railway variables set GEMINI_API_KEY=<あなたのキー>
-   railway variables set JQUANTS_TOKEN=<あなたのトークン>
-   ```
+  railway variables set GEMINI_API_KEY=<あなたのキー>
+  railway variables set JQUANTS_TOKEN=<あなたのトークン>
+  ```
+
+## 動作確認
+
+業界・銘柄タップ機能が正しく動作しているか確認するには、ブラウザの開発者ツールを開き、Network タブで次のリクエストを監視してください。
+
+- `/api/industries/` – 業界一覧の取得
+- `/api/industries/<ID>/tickers/` – 選択した業界の銘柄取得
+
+これらのエンドポイントへのリクエストが表示されれば、フロントエンドと API の連携が機能しています。
