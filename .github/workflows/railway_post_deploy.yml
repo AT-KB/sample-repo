@@ -11,13 +11,18 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: railwayapp/cli@v2
-      - name: Run Migrate
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Railway CLI
+        uses: railwayapp/cli@v2
+
+      - name: Run Database Migrations
         run: railway run python manage.py migrate
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-      - name: Run Script to Populate Data
+
+      - name: Populate Database from CSV
         run: railway run python scripts/update_tickers_from_csv.py
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
