@@ -3,6 +3,7 @@ import pandas as pd
 import markdown2
 import logging
 from django.http import HttpResponse
+from datetime import date
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
@@ -69,6 +70,7 @@ def fetch_data(ticker):
         "chart_data": chart_data,
         "latest_data_table": latest_table_html,
         "prediction_table": prediction_table_html,
+        "predictions": prediction_dict,
         "quarterly_table": quarterly_table,
         "annual_table": annual_table,
         "warning": warning,
@@ -89,6 +91,7 @@ def main_analysis_view(request):
     for industry in industries:
         tickers = industry.ticker_set.order_by("code").values("code", "name")
         industry_map_data[industry.name] = list(tickers)
+    today = date.today()
 
     context = {
         "ticker1": ticker1,
@@ -96,6 +99,7 @@ def main_analysis_view(request):
         "data1": data1,
         "data2": data2,
         "industry_map": industry_map_data,
+        "today": today,
     }
     return render(request, "core/main_analysis.html", context)
 
