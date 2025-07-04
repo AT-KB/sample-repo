@@ -6,8 +6,14 @@ import logging
 api_key = os.environ.get("GEMINI_API_KEY")
 if api_key:
     genai.configure(api_key=api_key)
+    _model = genai.GenerativeModel("gemini-1.5-flash")
+    _generation_config = genai.types.GenerationConfig(temperature=0.2)
 else:
-    logging.warning("GEMINI_API_KEY is not set, Gemini features will be disabled.")
+    logging.warning(
+        "GEMINI_API_KEY is not set, Gemini features will be disabled."
+    )
+    _model = None
+    _generation_config = None
 
 
 def generate_analyst_report(
@@ -65,17 +71,17 @@ def generate_analyst_report(
 - **ストップロス:** （考察結果からストップロスに関する記述を抽出）
 ```
 """
-    model = genai.GenerativeModel("gemini-1.5-flash")
-    generation_config = genai.types.GenerationConfig(temperature=0.2)
+    if _model is None:
+        return "Gemini API key is not configured."
 
     # ステップ1: 思考
     try:
-        reasoning_resp = model.generate_content(
-            reasoning_prompt, generation_config=generation_config
+        reasoning_resp = _model.generate_content(
+            reasoning_prompt, generation_config=_generation_config
         )
     except Exception as e:
         logging.error(f"Gemini call failed: {e}", exc_info=True)
-        return "（AIレポート生成エラー）"
+        return ""
 
     # ステップ2: 校正
     final_prompt = final_prompt_template.format(
@@ -85,11 +91,11 @@ def generate_analyst_report(
     )
 
     try:
-        final_resp = model.generate_content(
-            final_prompt, generation_config=generation_config
+        final_resp = _model.generate_content(
+            final_prompt, generation_config=_generation_config
         )
     except Exception as e:
         logging.error(f"Gemini call failed: {e}", exc_info=True)
-        return "（AIレポート生成エラー）"
+        return ""
 
     return final_resp.text
