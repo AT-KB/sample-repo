@@ -29,6 +29,11 @@ jobs:
           pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt -r requirements-dev.txt
           # これで pandas と openpyxl も入り、Excelスクリプトが動くようになる
+      - name: Run Migrations
+        shell: bash
+        run: |
+          source .venv/bin/activate
+          python manage.py migrate
       - name: Run Tests
         shell: bash
         env:
