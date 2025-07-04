@@ -58,7 +58,10 @@ def fetch_data(ticker):
         latest_dict,
         prediction_dict,
     )
-    gemini_report_html = markdown2.markdown(gemini_report_md)
+    if gemini_report_md:
+        gemini_report_html = markdown2.markdown(gemini_report_md)
+    else:
+        gemini_report_html = "<p>AIレポートを生成できませんでした。</p>"
 
     return {
         "ticker": ticker,
