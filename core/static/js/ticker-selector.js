@@ -1,4 +1,5 @@
-fetch('/api/industries/')
+const industriesUrl = "{% url 'api-industries' %}";
+fetch(industriesUrl)
   .then(r => r.json())
   .then(data => {
     const ilist = document.getElementById('industry-list');
@@ -7,7 +8,8 @@ fetch('/api/industries/')
       li.textContent = ind.name;
       li.style.cursor = 'pointer';
       li.addEventListener('click', () => {
-        fetch(`/api/industries/${ind.id}/tickers/`)
+        const tickersUrl = (id) => "{% url 'api-industry-tickers' 0 %}".replace("0", id);
+        fetch(tickersUrl(ind.id))
           .then(r => r.json())
           .then(tickers => {
             const tlist = document.getElementById('ticker-list');

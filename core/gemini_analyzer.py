@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import google.generativeai as genai
 import logging
+from datetime import date
 
 api_key = os.environ.get("GEMINI_API_KEY")
 if api_key:
@@ -29,12 +30,12 @@ def generate_analyst_report(
     latest_data_text = (
         pd.DataFrame(latest_data_dict).to_string(index=False)
         if latest_data_dict
-        else "（テクニカル指標データなし）"
+        else ""
     )
     predictions_text = (
         pd.DataFrame(predictions_dict).to_string(index=False)
         if predictions_dict
-        else "（モデル予測データなし）"
+        else ""
     )
 
     reasoning_prompt = f"""
@@ -54,8 +55,8 @@ def generate_analyst_report(
 
 {reasoning_text}
 
-```markdown
-### 投資戦略サマリー：{ticker_name}
+### 投資戦略サマリー：{ticker_name} ({ticker_code})
+作成日：{date.today().strftime("%Y年%m月%d日")}
 
 | 評価軸 | 分析結果と判断 |
 |:---|:---|
@@ -69,7 +70,6 @@ def generate_analyst_report(
 - **エントリーポイント:** （考察結果からエントリーポイントに関する記述を抽出）
 - **ターゲットプライス:** （考察結果からターゲットプライスに関する記述を抽出）
 - **ストップロス:** （考察結果からストップロスに関する記述を抽出）
-```
 """
     if _model is None:
         return "Gemini API key is not configured."

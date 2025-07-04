@@ -1,0 +1,17 @@
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>予測日数</th><th>予測方向</th><th>上昇確率</th><th>期待リターン</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for row in predictions %}
+    <tr>
+      <td>{{ row.予測日数 }}</td>
+      <td>{{ row.予想方向 }}</td>
+      <td>{{ row.上昇確率 }}%</td>
+      <td>{{ row.期待リターン }}%</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>

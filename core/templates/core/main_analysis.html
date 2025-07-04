@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
-{% load json_extras static %}
+{% load static %}
+{% load json_extras %}
 {% block content %}
 <h1>Candlestick Analysis</h1>
   <form method="get" class="row g-2 mb-3">
@@ -36,7 +37,7 @@
       <div class="alert alert-warning">{{ data1.warning }}</div>
     {% endif %}
       {% if data1.chart_data %}
-        <h2>{{ data1.company_name|default:ticker1 }}</h2>
+        {% include "partials/report_header.html" with company_name=data1.company_name|default:ticker1 ticker=ticker1 today=today %}
         <img src="data:image/png;base64,{{ data1.chart_data }}" alt="Chart" class="img-fluid w-100">
       {% endif %}
     {% if data1.latest_data_table %}
@@ -49,9 +50,9 @@
     {% if data1.annual_table %}
       {{ data1.annual_table|safe }}
     {% endif %}
-      {% if data1.prediction_table %}
+      {% if data1.predictions %}
         <h3>Predictions</h3>
-        {{ data1.prediction_table|safe }}
+        {% include "partials/predictions_table.html" with predictions=data1.predictions %}
         {{ data1.gemini_report_html|safe }}
       {% endif %}
   </div>
@@ -60,7 +61,7 @@
       <div class="alert alert-warning">{{ data2.warning }}</div>
     {% endif %}
       {% if data2.chart_data %}
-        <h2>{{ data2.company_name|default:ticker2 }}</h2>
+        {% include "partials/report_header.html" with company_name=data2.company_name|default:ticker2 ticker=ticker2 today=today %}
         <img src="data:image/png;base64,{{ data2.chart_data }}" alt="Chart" class="img-fluid w-100">
       {% endif %}
     {% if data2.latest_data_table %}
@@ -73,58 +74,12 @@
     {% if data2.annual_table %}
       {{ data2.annual_table|safe }}
     {% endif %}
-      {% if data2.prediction_table %}
+      {% if data2.predictions %}
         <h3>Predictions</h3>
-        {{ data2.prediction_table|safe }}
+        {% include "partials/predictions_table.html" with predictions=data2.predictions %}
         {{ data2.gemini_report_html|safe }}
       {% endif %}
   </div>
 </div>
-  <script>
-  const industryMap = {{ industry_map | tojson | safe }};
-  const tickerModal = document.getElementById('tickerModal');
-  let activeInput = null;
-
-  // どの「銘柄検索」ボタンが押されたかを記録する
-  document.querySelectorAll('.ticker-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      activeInput = document.querySelector(btn.dataset.input);
-    });
-  });
-
-  // モーダルが表示される直前のイベントを捕捉
-  tickerModal.addEventListener('show.bs.modal', () => {
-    const body = tickerModal.querySelector('.modal-body');
-    // モーダルの中身を一度空にする
-    body.innerHTML = '';
-
-    // industryMapのデータを使って、業種と銘柄のボタンを動的に生成する
-    for (const [industry, tickers] of Object.entries(industryMap)) {
-      const industryBlock = document.createElement('div');
-      industryBlock.className = 'mb-3';
-
-      const industryHeading = document.createElement('h6');
-      industryHeading.textContent = industry;
-      industryBlock.appendChild(industryHeading);
-
-      tickers.forEach(ticker => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'btn btn-sm btn-outline-primary m-1';
-        button.textContent = `${ticker.code} ${ticker.name}`;
-
-        // ボタンがクリックされた時の処理
-        button.addEventListener('click', () => {
-          if (activeInput) {
-            activeInput.value = ticker.code; // 銘柄コードを入力欄に設定
-          }
-          bootstrap.Modal.getInstance(tickerModal).hide(); // モーダルを閉じる
-        });
-        industryBlock.appendChild(button);
-      });
-
-      body.appendChild(industryBlock);
-    }
-  });
-  </script>
+  <script src="{% static 'js/ticker-selector.js' %}"></script>
 {% endblock %}
