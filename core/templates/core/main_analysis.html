@@ -53,7 +53,6 @@
       {% if data1.predictions %}
         <h3>Predictions</h3>
         {% include "partials/predictions_table.html" with predictions=data1.predictions %}
-        {{ data1.gemini_report_html|safe }}
       {% endif %}
   </div>
   <div class="col-md-6">
@@ -77,9 +76,8 @@
       {% if data2.predictions %}
         <h3>Predictions</h3>
         {% include "partials/predictions_table.html" with predictions=data2.predictions %}
-        {{ data2.gemini_report_html|safe }}
       {% endif %}
   </div>
 </div>
-  <script src="{% static 'js/ticker-selector.js' %}"></script>
+  <script src="{% static 'js/ticker-modal.js' %}"></script>
 {% endblock %}
