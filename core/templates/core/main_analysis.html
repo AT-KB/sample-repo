@@ -37,7 +37,7 @@
       <div class="alert alert-warning">{{ data1.warning }}</div>
     {% endif %}
       {% if data1.chart_data %}
-        {% include "partials/report_header.html" with company_name=data1.company_name|default:ticker1 ticker=ticker1 today=today %}
+        {{ data1.gemini_report_html|safe }}
         <img src="data:image/png;base64,{{ data1.chart_data }}" alt="Chart" class="img-fluid w-100">
       {% endif %}
     {% if data1.latest_data_table %}
@@ -61,7 +61,7 @@
       <div class="alert alert-warning">{{ data2.warning }}</div>
     {% endif %}
       {% if data2.chart_data %}
-        {% include "partials/report_header.html" with company_name=data2.company_name|default:ticker2 ticker=ticker2 today=today %}
+        {{ data2.gemini_report_html|safe }}
         <img src="data:image/png;base64,{{ data2.chart_data }}" alt="Chart" class="img-fluid w-100">
       {% endif %}
     {% if data2.latest_data_table %}
